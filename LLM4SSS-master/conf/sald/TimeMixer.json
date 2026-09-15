@@ -1,0 +1,39 @@
+{
+    "model_selected": "TimeMixer",
+    "dataset_selected": "sald",
+
+    "conf_path": "./conf/sald/TimeMixer.json",
+    "data_path": "../Data/LLM4SSS/",
+    "train_path": "./example/TimeMixer/sald/sample/train.bin",
+    "val_path": "./example/TimeMixer/sald/sample/val.bin",
+    "test_path": "./example/TimeMixer/sald/sample/test.bin",
+    "train_indices_path": "./example/TimeMixer/sald/sample/train_indices.bin",
+    "val_indices_path": "./example/TimeMixer/sald/sample/val_indices.bin",
+    "test_indices_path": "./example/TimeMixer/sald/sample/test_indices.bin",
+    "log_path": "./example/TimeMixer/sald/log/example.log",
+    "model_path": "./example/TimeMixer/sald/model/",
+
+    "device": "cuda:4",
+    "GPUs": [4],
+
+    "epoch_max": 100,
+    "len_series": 128,
+    "len_reduce": 16,
+    "batch_size": 1024,
+    
+    "data_size": 10000000,
+    "train_size":200000,
+    "val_size": 10000,
+    "test_size": 10000,
+
+    "down_sampling_num": 4,
+    "sampling_win_size": 2,
+
+    "trend_win": 7,
+
+    "d_model": 256,
+    "d_ff": 512,
+    "enc_layers": 2,
+
+    "dropout": 0.1
+}

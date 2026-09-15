@@ -1,0 +1,42 @@
+{
+    "model_selected": "GPT4SSS",
+    "dataset_selected": "deep1B",
+    
+    "conf_path": "./conf/deep1B/GPT4SSS.json",
+    "data_path": "../Data/LLM4SSS/",
+    "llm_path": "../../TOS/ZhongzhengWang/model/",
+    "train_path": "./example/GPT4SSS/deep1B/sample/train.bin",
+    "val_path": "./example/GPT4SSS/deep1B/sample/val.bin",
+    "test_path": "./example/GPT4SSS/deep1B/sample/test.bin",
+    "train_indices_path": "./example/GPT4SSS/deep1B/sample/train_indices.bin",
+    "val_indices_path": "./example/GPT4SSS/deep1B/sample/val_indices.bin",
+    "test_indices_path": "./example/GPT4SSS/deep1B/sample/test_indices.bin",
+    "log_path": "./example/GPT4SSS/deep1B/log/example.log",
+    "model_path": "./example/GPT4SSS/deep1B/model/",
+
+    "device": "cuda:2",
+    "GPUs": [2],
+
+    "llm_type": "gpt2",
+    "llm_layers": 6,
+
+    "epoch_max": 100,
+    "len_series": 96,
+    "len_reduce": 16,
+    "batch_size": 1536,
+    
+    "data_size": 10000000,
+    "train_size":200000,
+    "val_size": 10000,
+    "test_size": 10000,
+
+    "patch_len": 16,
+    "stride": 8,
+
+    "head_num": 8,
+    "dim_model": 512,
+    "dim_llm": 768,
+    "dim_ff": 256,
+
+    "dropout": 0.1
+}

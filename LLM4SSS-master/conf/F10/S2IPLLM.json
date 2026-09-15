@@ -1,0 +1,52 @@
+{
+    "model_selected": "S2IPLLM",
+    "dataset_selected": "F10",
+
+    "conf_path": "./conf/F10/S2IPLLM.json",
+    "data_path": "../Data/LLM4SSS/",
+    "llm_path": "../../TOS/ZhongzhengWang/model/",
+    "train_path": "./example/S2IPLLM/F10/sample/train.bin",
+    "val_path": "./example/S2IPLLM/F10/sample/val.bin",
+    "test_path": "./example/S2IPLLM/F10/sample/test.bin",
+    "train_indices_path": "./example/S2IPLLM/F10/sample/train_indices.bin",
+    "val_indices_path": "./example/S2IPLLM/F10/sample/val_indices.bin",
+    "test_indices_path": "./example/S2IPLLM/F10/sample/test_indices.bin",
+    "log_path": "./example/S2IPLLM/F10/log/example.log",
+    "model_path": "./example/S2IPLLM/F10/model/",
+
+    "device": "cuda:4",
+    "GPUs": [4],
+
+    "llm_type": "gpt2",
+    "llm_layers": 6,
+
+    "head_num": 8,
+    "dim_llm": 768,
+
+    "epoch_max": 100,
+    "len_series": 256,
+    "len_reduce": 16,
+    "batch_size": 768,
+    
+    "data_size": 10000000,
+    "train_size":200000,
+    "val_size": 10000,
+    "test_size": 10000,
+
+    "win_size": 16,
+    "stride": 16,
+
+    "trend_len": 16,
+    "seasonal_len": 16,
+    "pool_size": 1000,
+    "prompt_key_init": "text_prototype",
+    "embedding_key": "mean",
+    "top_k": 8,
+
+    "encoder_type": "linear",
+    "decoder_type": "linear",
+    "mlp_layers": 2,
+    "mlp_dim": 512,
+    "activation":"tanh",
+    "dropout": 0.1
+}

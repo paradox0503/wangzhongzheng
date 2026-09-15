@@ -1,0 +1,43 @@
+{
+    "model_selected": "UniTime",
+    "dataset_selected": "human",
+
+    "conf_path": "./conf/human/UniTime.json",
+    "data_path": "../Data/LLM4SSS/",
+    "llm_path": "../../TOS/ZhongzhengWang/model/",
+    "train_path": "./example/UniTime/human/sample/train.bin",
+    "val_path": "./example/UniTime/human/sample/val.bin",
+    "test_path": "./example/UniTime/human/sample/test.bin",
+    "train_indices_path": "./example/UniTime/human/sample/train_indices.bin",
+    "val_indices_path": "./example/UniTime/human/sample/val_indices.bin",
+    "test_indices_path": "./example/UniTime/human/sample/test_indices.bin",
+    "log_path": "./example/UniTime/human/log/example.log",
+    "model_path": "./example/UniTime/human/model/",
+
+    "device": "cuda:1",
+    "GPUs": [1],
+
+    "llm_type": "gpt2",
+    "llm_layers": 6,
+
+    "epoch_max": 100,
+    "len_series": 256,
+    "len_reduce": 16,
+    "batch_size": 512,
+
+    "data_size": 10000000,
+    "train_size":200000,
+    "val_size": 10000,
+    "test_size": 10000,
+
+    "patch_len": 16,
+    "stride": 8,
+
+    "head_num": 8,
+    "dim_llm": 768,
+
+    "mask_rate": 0.1,
+    "dec_layernum": 2,
+
+    "dropout": 0.1
+}

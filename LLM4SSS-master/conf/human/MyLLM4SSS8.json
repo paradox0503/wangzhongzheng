@@ -1,0 +1,45 @@
+{
+    "model_selected": "MyLLM4SSS8",
+    "dataset_selected": "human",
+
+    "conf_path": "./conf/human/MyLLM4SSS8.json",
+    "data_path": "../Data/LLM4SSS/",
+    "llm_path": "../../TOS/ZhongzhengWang/model/",
+    "train_path": "./example/MyLLM4SSS8/human/sample/train.bin",
+    "val_path": "./example/MyLLM4SSS8/human/sample/val.bin",
+    "test_path": "./example/MyLLM4SSS8/human/sample/test.bin",
+    "train_indices_path": "./example/MyLLM4SSS8/human/sample/train_indices.bin",
+    "val_indices_path": "./example/MyLLM4SSS8/human/sample/val_indices.bin",
+    "test_indices_path": "./example/MyLLM4SSS8/human/sample/test_indices.bin",
+    "log_path": "./example/MyLLM4SSS8/human/log/example.log",
+    "model_path": "./example/MyLLM4SSS8/human/model/",
+
+    "device": "cuda:0",
+    "GPUs": [0],
+
+    "llm_type": "gpt2",
+    "llm_layers": 6,
+
+    "head_num": 8,
+    "dim_llm": 768,
+
+    "epoch_max": 100,
+    "len_series": 256,
+    "len_reduce": 16,
+    "batch_size": 256,
+
+    "data_size": 10000000,
+    "train_size":200000,
+    "val_size": 10000,
+    "test_size": 10000,
+
+    "k": 4,
+    "max_win_size": 128,
+    "min_win_size": 16,
+
+    "patch_size": 16,
+    "stride": 16,
+
+    "activation":"tanh",
+    "dropout": 0.1
+}

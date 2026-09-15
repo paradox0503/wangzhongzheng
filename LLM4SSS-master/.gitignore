@@ -1,0 +1,9 @@
+example/*
+
+nnCoverage/data/*
+nnCoverage/result/*
+
+BSF_Data/**/*.bin
+
+run.out
+BSF_Data.out

@@ -1,0 +1,44 @@
+{
+    "model_selected": "AutoTimes",
+    "dataset_selected": "sald",
+
+    "conf_path": "./conf/sald/AutoTimes.json",
+    "data_path": "../Data/LLM4SSS/",
+    "llm_path": "../../TOS/ZhongzhengWang/model/",
+    "train_path": "./example/AutoTimes/sald/sample/train.bin",
+    "val_path": "./example/AutoTimes/sald/sample/val.bin",
+    "test_path": "./example/AutoTimes/sald/sample/test.bin",
+    "train_indices_path": "./example/AutoTimes/sald/sample/train_indices.bin",
+    "val_indices_path": "./example/AutoTimes/sald/sample/val_indices.bin",
+    "test_indices_path": "./example/AutoTimes/sald/sample/test_indices.bin",
+    "log_path": "./example/AutoTimes/sald/log/example.log",
+    "model_path": "./example/AutoTimes/sald/model/",
+
+    "device": "cuda:6",
+    "GPUs": [6],
+
+    "llm_type": "gpt2",
+    "llm_layers": 6,
+
+    "head_num": 8,
+    "dim_llm": 768,
+
+    "epoch_max": 100,
+    "len_series": 128,
+    "len_reduce": 16,
+    "batch_size": 1536,
+    
+    "data_size": 10000000,
+    "train_size":200000,
+    "val_size": 10000,
+    "test_size": 10000,
+
+    "win_size": 8,
+    "stride": 8,
+    "mlp_layers": 2,
+    "mlp_dim": 512,
+
+    "activation": "tanh",
+
+    "dropout": 0.1
+}

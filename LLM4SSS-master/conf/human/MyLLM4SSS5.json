@@ -1,0 +1,33 @@
+{
+    "model_selected": "MyLLM4SSS5",
+    "dataset_selected": "human",
+
+    "conf_path": "./conf/human/MyLLM4SSS5.json",
+    "data_path": "../Data/LLM4SSS/",
+    "train_path": "./example/MyLLM4SSS5/human/sample/train.bin",
+    "val_path": "./example/MyLLM4SSS5/human/sample/val.bin",
+    "test_path": "./example/MyLLM4SSS5/human/sample/test.bin",
+    "train_indices_path": "./example/MyLLM4SSS5/human/sample/train_indices.bin",
+    "val_indices_path": "./example/MyLLM4SSS5/human/sample/val_indices.bin",
+    "test_indices_path": "./example/MyLLM4SSS5/human/sample/test_indices.bin",
+    "log_path": "./example/MyLLM4SSS5/human/log/example.log",
+    "model_path": "./example/MyLLM4SSS5/human/model/",
+
+    "device": "cuda:3",
+    "GPUs": [3],
+
+    "epoch_max": 100,
+    "len_series": 256,
+    "len_reduce": 16,
+    "batch_size": 1024,
+    
+    "data_size": 10000000,
+    "train_size":200000,
+    "val_size": 10000,
+    "test_size": 10000,
+
+    "mlp_layers": 20,
+    "mlp_dim": 2024,
+    "activation":"tanh",
+    "dropout": 0.1
+}
