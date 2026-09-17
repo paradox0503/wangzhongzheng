@@ -3,7 +3,7 @@
     "dataset_selected": "deep1B",
 
     "conf_path": "./conf/deep1B/AutoTimes.json",
-    "data_path": "../Data/LLM4SSS/",
+    "data_path": "/data/user_jialinhan/data_big/",
     "llm_path": "../../TOS/ZhongzhengWang/model/",
     "train_path": "./example/AutoTimes/deep1B/sample/train.bin",
     "val_path": "./example/AutoTimes/deep1B/sample/val.bin",

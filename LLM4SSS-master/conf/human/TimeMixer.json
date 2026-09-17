@@ -3,7 +3,7 @@
     "dataset_selected": "human",
 
     "conf_path": "./conf/human/TimeMixer.json",
-    "data_path": "../Data/LLM4SSS/",
+    "data_path": "/data/user_jialinhan/data_big/",
     "train_path": "./example/TimeMixer/human/sample/train.bin",
     "val_path": "./example/TimeMixer/human/sample/val.bin",
     "test_path": "./example/TimeMixer/human/sample/test.bin",

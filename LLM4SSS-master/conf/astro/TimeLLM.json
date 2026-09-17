@@ -3,7 +3,7 @@
     "dataset_selected": "astro",
 
     "conf_path": "./conf/astro/TimeLLM.json",
-    "data_path": "../Data/LLM4SSS/",
+    "data_path": "/data/user_jialinhan/data_big/",
     "llm_path": "../../TOS/ZhongzhengWang/model/",
     "train_path": "./example/TimeLLM/astro/sample/train.bin",
     "val_path": "./example/TimeLLM/astro/sample/val.bin",

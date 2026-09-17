@@ -3,7 +3,7 @@
     "dataset_selected": "astro",
     
     "conf_path": "./conf/astro/GPT4SSS.json",
-    "data_path": "../Data/LLM4SSS/",
+    "data_path": "/data/user_jialinhan/data_big/",
     "llm_path": "../../TOS/ZhongzhengWang/model/",
     "train_path": "./example/GPT4SSS/astro/sample/train.bin",
     "val_path": "./example/GPT4SSS/astro/sample/val.bin",

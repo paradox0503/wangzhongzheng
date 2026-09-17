@@ -3,7 +3,7 @@
     "dataset_selected": "F5",
 
     "conf_path": "./conf/F5/AutoTimes.json",
-    "data_path": "../Data/LLM4SSS/",
+    "data_path": "/data/user_jialinhan/data_big/",
     "llm_path": "../../TOS/ZhongzhengWang/model/",
     "train_path": "./example/AutoTimes/F5/sample/train.bin",
     "val_path": "./example/AutoTimes/F5/sample/val.bin",

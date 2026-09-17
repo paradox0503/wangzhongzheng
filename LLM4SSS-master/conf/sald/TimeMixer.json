@@ -3,7 +3,7 @@
     "dataset_selected": "sald",
 
     "conf_path": "./conf/sald/TimeMixer.json",
-    "data_path": "../Data/LLM4SSS/",
+    "data_path": "/data/user_jialinhan/data_big/",
     "train_path": "./example/TimeMixer/sald/sample/train.bin",
     "val_path": "./example/TimeMixer/sald/sample/val.bin",
     "test_path": "./example/TimeMixer/sald/sample/test.bin",

@@ -3,7 +3,7 @@
     "dataset_selected": "astro",
 
     "conf_path": "./conf/astro/TimeMixer.json",
-    "data_path": "../Data/LLM4SSS/",
+    "data_path": "/data/user_jialinhan/data_big/",
     "train_path": "./example/TimeMixer/astro/sample/train.bin",
     "val_path": "./example/TimeMixer/astro/sample/val.bin",
     "test_path": "./example/TimeMixer/astro/sample/test.bin",

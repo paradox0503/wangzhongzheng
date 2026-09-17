@@ -3,7 +3,7 @@
     "dataset_selected": "sald",
 
     "conf_path": "./conf/sald/AutoTimes.json",
-    "data_path": "../Data/LLM4SSS/",
+    "data_path": "/data/user_jialinhan/data_big/",
     "llm_path": "../../TOS/ZhongzhengWang/model/",
     "train_path": "./example/AutoTimes/sald/sample/train.bin",
     "val_path": "./example/AutoTimes/sald/sample/val.bin",

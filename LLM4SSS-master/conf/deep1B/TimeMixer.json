@@ -3,7 +3,7 @@
     "dataset_selected": "deep1B",
 
     "conf_path": "./conf/deep1B/TimeMixer.json",
-    "data_path": "../Data/LLM4SSS/",
+    "data_path": "/data/user_jialinhan/data_big/",
     "train_path": "./example/TimeMixer/deep1B/sample/train.bin",
     "val_path": "./example/TimeMixer/deep1B/sample/val.bin",
     "test_path": "./example/TimeMixer/deep1B/sample/test.bin",

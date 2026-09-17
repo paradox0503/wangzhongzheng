@@ -3,7 +3,7 @@
     "dataset_selected": "human",
 
     "conf_path": "./conf/human/MyLLM4SSS1.json",
-    "data_path": "../Data/LLM4SSS/",
+    "data_path": "/data/user_jialinhan/data_big/",
     "llm_path": "../../TOS/ZhongzhengWang/model/",
     "train_path": "./example/MyLLM4SSS1/human/sample/train.bin",
     "val_path": "./example/MyLLM4SSS1/human/sample/val.bin",

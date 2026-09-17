@@ -1,7 +1,7 @@
 {
   "model_selected": "TimeMoE",
   "dataset_selected": "deep1B",
-  "data_path": "../Data/LLM4SSS/",
+  "data_path": "/data/user_jialinhan/data_big/",
   "epoch_max": 100,
   "len_series": 96,
   "len_reduce": 16,

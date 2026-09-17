@@ -3,7 +3,7 @@
     "dataset_selected": "F10",
 
     "conf_path": "./conf/F10/TimeMixer.json",
-    "data_path": "../Data/LLM4SSS/",
+    "data_path": "/data/user_jialinhan/data_big/",
     "train_path": "./example/TimeMixer/F10/sample/train.bin",
     "val_path": "./example/TimeMixer/F10/sample/val.bin",
     "test_path": "./example/TimeMixer/F10/sample/test.bin",
