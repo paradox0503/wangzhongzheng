@@ -23,6 +23,8 @@ from model.AutoTimes import AutoTimes
 from model.UniTime import UniTime
 from model.S2IPLLM import S2IPLLM
 from model.TimeMixer import TimeMixer
+from model.UniTS import UniTS
+from model.TimeMoE import TimeMoE
    
 from model.MyLLM4SSS1 import MyLLM4SSS1
 from model.MyLLM4SSS2 import MyLLM4SSS2
@@ -59,6 +61,13 @@ class Experiment:
         self.delta = 0.0005
         self.val_error_history = []
 
+        # New model configs use the same output layout without precreated folders.
+        if self.model_selected in ('UniTS', 'TimeMoE'):
+            os.makedirs(self.model_path, exist_ok=True)
+            for key in ('log_path', 'train_path', 'val_path', 'test_path',
+                        'train_indices_path', 'val_indices_path', 'test_indices_path'):
+                os.makedirs(os.path.dirname(self.conf.getEntry(key)) or '.', exist_ok=True)
+
         logging.basicConfig(
             level = logging.INFO,
             format = '%(asctime)s - %(levelname)s - %(message)s',
@@ -85,7 +94,8 @@ class Experiment:
                 self.epoch = self.epoch_max
 
             if self.epoch % 5 == 0:
-                torch.save(self.model.module.state_dict(), f"{self.model_path}example_model.pth")       # pyright:ignore
+                model_to_save = self.model.module if isinstance(self.model, nn.DataParallel) else self.model
+                torch.save(model_to_save.state_dict(), f"{self.model_path}example_model.pth")
                 logging.info(f"Model in epoch: {self.epoch} saved successfully.")
 
         self.test()
@@ -121,6 +131,8 @@ class Experiment:
             "UniTime": UniTime,
             "S2IPLLM": S2IPLLM,
             "TimeMixer": TimeMixer,
+            "UniTS": UniTS,
+            "TimeMoE": TimeMoE,
             "MyLLM4SSS1": MyLLM4SSS1,
             "MyLLM4SSS2": MyLLM4SSS2,
             "MyLLM4SSS3": MyLLM4SSS3,
@@ -221,6 +233,8 @@ class Experiment:
 
 
     def train(self) -> None:
+        if self.model_selected in ('UniTS', 'TimeMoE'):
+            self.model.train()
         logging.info(f'epoch: {self.epoch}, start training')
 
         if self.loss_method == "Umap":
@@ -293,6 +307,8 @@ class Experiment:
 
 
     def validate(self) -> None:
+        if self.model_selected in ('UniTS', 'TimeMoE'):
+            self.model.eval()
         errors = []
 
         with torch.no_grad():
@@ -340,6 +356,8 @@ class Experiment:
 
 
     def test(self) -> None:
+        if self.model_selected in ('UniTS', 'TimeMoE'):
+            self.model.eval()
         errors = []
 
         with torch.no_grad():

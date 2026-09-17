@@ -23,6 +23,8 @@ from model.AutoTimes import AutoTimes
 from model.UniTime import UniTime
 from model.S2IPLLM import S2IPLLM
 from model.TimeMixer import TimeMixer
+from model.UniTS import UniTS
+from model.TimeMoE import TimeMoE
 
 from model.MyLLM4SSS1 import MyLLM4SSS1
 from model.MyLLM4SSS2 import MyLLM4SSS2
@@ -73,8 +75,9 @@ def main(argv):
     len_reduce = conf.getEntry("len_reduce")
 
     data_path = conf.getEntry("data_path")
-    data_pos = data_path + dataset_selected + "/data.bin"
-    query_pos = data_path + dataset_selected + "/query.bin"
+    file_prefix = 'deep1b' if dataset_selected == 'deep1B' else dataset_selected
+    data_pos = os.path.join(data_path, file_prefix + '-dataset.bin')
+    query_pos = os.path.join(data_path, file_prefix + '-query.bin')
 
     train_pos = f"{train_data_path}/{model_selected}/{dataset_selected}/sample/train.bin"
 
@@ -86,6 +89,8 @@ def main(argv):
             "UniTime": UniTime,
             "S2IPLLM": S2IPLLM,
             "TimeMixer": TimeMixer,
+            "UniTS": UniTS,
+            "TimeMoE": TimeMoE,
             "MyLLM4SSS1": MyLLM4SSS1,
             "MyLLM4SSS2": MyLLM4SSS2,
             "MyLLM4SSS3": MyLLM4SSS3,
@@ -106,6 +111,7 @@ def main(argv):
 
         checkpoint = torch.load(model_path, weights_only=True)
         model.load_state_dict(checkpoint)
+        model.eval()
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(model, device_ids=selected_devices)
 

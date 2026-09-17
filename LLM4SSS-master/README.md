@@ -42,3 +42,7 @@
 **结构特点**
 - 优点：分层清晰，`conf` + `model` + `utils` 解耦，便于横向比较多模型。
 - 风格：偏研究代码组织，结果与中间产物目录（如 `BSF_Tightness/figure/`）也放在仓库内。
+
+## UniTS / TimeMoE-50M
+
+See [integration guide](MODELS_UniTS_TimeMoE.md) for model paths, dependencies, configurations and commands.

@@ -1,6 +1,7 @@
 from torch.utils.data import Dataset
 from utils.conf import Configuration
 
+import os
 import numpy as np
 import torch
 
@@ -19,7 +20,8 @@ class TSData(Dataset):
 def getSamples(conf: Configuration):
     dataset_selected = conf.getEntry("dataset_selected")
     data_path = conf.getEntry("data_path")
-    data_pos = data_path + dataset_selected + "/data.bin"
+    file_prefix = 'deep1b' if dataset_selected == 'deep1B' else dataset_selected
+    data_pos = os.path.join(data_path, file_prefix + '-dataset.bin')
     
     train_path = conf.getEntry("train_path")
     val_path = conf.getEntry("val_path")

@@ -25,6 +25,8 @@ from model.AutoTimes import AutoTimes
 from model.UniTime import UniTime
 from model.S2IPLLM import S2IPLLM
 from model.TimeMixer import TimeMixer
+from model.UniTS import UniTS
+from model.TimeMoE import TimeMoE
    
 from model.MyLLM4SSS1 import MyLLM4SSS1
 from model.MyLLM4SSS2 import MyLLM4SSS2
@@ -60,6 +62,9 @@ class Experiment:
         self.epochs_without_improvement = 0
         self.delta = 0.0005
         self.val_error_history = []
+
+        if self.model_selected in ('UniTS', 'TimeMoE'):
+            os.makedirs(os.path.dirname(self.log_path) or '.', exist_ok=True)
 
         logging.basicConfig(
             level = logging.INFO,
@@ -100,6 +105,8 @@ class Experiment:
             "UniTime": UniTime,
             "S2IPLLM": S2IPLLM,
             "TimeMixer": TimeMixer,
+            "UniTS": UniTS,
+            "TimeMoE": TimeMoE,
             "MyLLM4SSS1": MyLLM4SSS1,
             "MyLLM4SSS2": MyLLM4SSS2,
             "MyLLM4SSS3": MyLLM4SSS3,

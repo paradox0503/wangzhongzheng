@@ -1,0 +1,29 @@
+{
+  "model_selected": "TimeMoE",
+  "dataset_selected": "deep1B",
+  "data_path": "../Data/LLM4SSS/",
+  "epoch_max": 100,
+  "len_series": 96,
+  "len_reduce": 16,
+  "data_size": 10000000,
+  "train_size": 200000,
+  "val_size": 10000,
+  "test_size": 10000,
+  "conf_path": "./conf/deep1B/TimeMoE.json",
+  "train_path": "./example/TimeMoE/deep1B/sample/train.bin",
+  "train_indices_path": "./example/TimeMoE/deep1B/sample/train_indices.bin",
+  "val_path": "./example/TimeMoE/deep1B/sample/val.bin",
+  "val_indices_path": "./example/TimeMoE/deep1B/sample/val_indices.bin",
+  "test_path": "./example/TimeMoE/deep1B/sample/test.bin",
+  "test_indices_path": "./example/TimeMoE/deep1B/sample/test_indices.bin",
+  "log_path": "./example/TimeMoE/deep1B/log/example.log",
+  "model_path": "./example/TimeMoE/deep1B/model/",
+  "device": "cuda:0",
+  "GPUs": [
+    0
+  ],
+  "batch_size": 64,
+  "time_moe_path": "../../TOS/ZhongzhengWang/model/TimeMoE-50M/",
+  "local_files_only": true,
+  "freeze_backbone": true
+}
