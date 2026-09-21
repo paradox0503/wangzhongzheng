@@ -7,3 +7,5 @@ BSF_Data/**/*.bin
 
 run.out
 BSF_Data.out
+model/__pycache__/*
+utils/__pycache__/*
