@@ -23,7 +23,7 @@
     0
   ],
   "batch_size": 64,
-  "time_moe_path": "../../TOS/ZhongzhengWang/model/TimeMoE-50M/",
+  "time_moe_path": "../model/TimeMoE-50M/",
   "local_files_only": true,
   "freeze_backbone": true
 }

@@ -4,7 +4,7 @@
 
     "conf_path": "./conf/human/UniTime.json",
     "data_path": "/data/user_jialinhan/data_big/",
-    "llm_path": "../../TOS/ZhongzhengWang/model/",
+    "llm_path": "../model/",
     "train_path": "./example/UniTime/human/sample/train.bin",
     "val_path": "./example/UniTime/human/sample/val.bin",
     "test_path": "./example/UniTime/human/sample/test.bin",

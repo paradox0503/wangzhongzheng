@@ -4,7 +4,7 @@
 
     "conf_path": "./conf/sald/S2IPLLM.json",
     "data_path": "/data/user_jialinhan/data_big/",
-    "llm_path": "../../TOS/ZhongzhengWang/model/",
+    "llm_path": "../model/",
     "train_path": "./example/S2IPLLM/sald/sample/train.bin",
     "val_path": "./example/S2IPLLM/sald/sample/val.bin",
     "test_path": "./example/S2IPLLM/sald/sample/test.bin",

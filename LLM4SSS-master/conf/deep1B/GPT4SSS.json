@@ -4,7 +4,7 @@
     
     "conf_path": "./conf/deep1B/GPT4SSS.json",
     "data_path": "/data/user_jialinhan/data_big/",
-    "llm_path": "../../TOS/ZhongzhengWang/model/",
+    "llm_path": "../model/",
     "train_path": "./example/GPT4SSS/deep1B/sample/train.bin",
     "val_path": "./example/GPT4SSS/deep1B/sample/val.bin",
     "test_path": "./example/GPT4SSS/deep1B/sample/test.bin",

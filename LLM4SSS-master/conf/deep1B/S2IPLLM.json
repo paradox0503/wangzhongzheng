@@ -4,7 +4,7 @@
 
     "conf_path": "./conf/deep1B/S2IPLLM.json",
     "data_path": "/data/user_jialinhan/data_big/",
-    "llm_path": "../../TOS/ZhongzhengWang/model/",
+    "llm_path": "../model/",
     "train_path": "./example/S2IPLLM/deep1B/sample/train.bin",
     "val_path": "./example/S2IPLLM/deep1B/sample/val.bin",
     "test_path": "./example/S2IPLLM/deep1B/sample/test.bin",

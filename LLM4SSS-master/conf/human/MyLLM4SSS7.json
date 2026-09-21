@@ -4,7 +4,7 @@
 
     "conf_path": "./conf/human/MyLLM4SSS7.json",
     "data_path": "/data/user_jialinhan/data_big/",
-    "llm_path": "../../TOS/ZhongzhengWang/model/",
+    "llm_path": "../model/",
     "train_path": "./example/MyLLM4SSS7/human/sample/train.bin",
     "val_path": "./example/MyLLM4SSS7/human/sample/val.bin",
     "test_path": "./example/MyLLM4SSS7/human/sample/test.bin",

@@ -4,7 +4,7 @@
 
     "conf_path": "./conf/sald/TimeLLM.json",
     "data_path": "/data/user_jialinhan/data_big/",
-    "llm_path": "../../TOS/ZhongzhengWang/model/",
+    "llm_path": "../model/",
     "train_path": "./example/TimeLLM/sald/sample/train.bin",
     "val_path": "./example/TimeLLM/sald/sample/val.bin",
     "test_path": "./example/TimeLLM/sald/sample/test.bin",
