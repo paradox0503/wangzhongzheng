@@ -60,6 +60,28 @@ class ExportEntrypointTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('--batch-size must be positive', result.stderr)
 
+    def test_other_models_check_their_checkpoint_without_training(self):
+        config = json.loads(self.conf.read_text(encoding='utf-8'))
+        for name in ('GPT4SSS', 'TimeLLM', 'UniTime', 'S2IPLLM',
+                     'TimeMixer', 'UniTS', 'TimeMoE', 'MyLLM4SSS2'):
+            with self.subTest(model=name):
+                checkpoint = self.root / name / 'example_model.pth'
+                config['model_selected'] = name
+                config['model_path'] = str(checkpoint.parent)
+                self.conf.write_text(json.dumps(config), encoding='utf-8')
+                result = self.run_entrypoint()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('FileNotFoundError', result.stderr)
+                self.assertIn(str(checkpoint), result.stderr)
+
+    def test_pair_model_requires_an_explicit_embedding_definition(self):
+        config = json.loads(self.conf.read_text(encoding='utf-8'))
+        config['model_selected'] = 'MyLLM4SSS9'
+        self.conf.write_text(json.dumps(config), encoding='utf-8')
+        result = self.run_entrypoint()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('paired inputs', result.stderr)
+
 
 if __name__ == '__main__':
     unittest.main()

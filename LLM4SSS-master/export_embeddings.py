@@ -1,4 +1,4 @@
-"""Export every AutoTimes dataset/query row as a float32 embedding, in order.
+"""Export every dataset/query row as a float32 embedding using the configured model.
 
 Run from the project root:
     python -u export_embeddings.py -C conf/astro/AutoTimes.json --batch-size 128
@@ -6,6 +6,7 @@ Relative paths in the configuration follow the training script's cwd convention.
 Existing outputs are refused; select another --output-dir for a new export.
 """
 import argparse
+from importlib import import_module
 import json
 import os
 from pathlib import Path
@@ -13,6 +14,26 @@ import sys
 import time
 
 import numpy as np
+
+
+SUPPORTED_MODELS = (
+    'AutoTimes', 'GPT4SSS', 'TimeLLM', 'UniTime', 'S2IPLLM',
+    'TimeMixer', 'UniTS', 'TimeMoE',
+) + tuple(f'MyLLM4SSS{i}' for i in range(1, 12) if i != 9)
+
+
+def forward_embeddings(model, model_name, batch):
+    """Adapt the project's model interfaces to one final vector per input row."""
+    # MyLLM4SSS7 allocates tensors using a cached training batch size.
+    # Update it for every batch, including the final partial batch.
+    if hasattr(model, 'batch_size'):
+        model.batch_size = batch.shape[0]
+    if model_name == 'UniTime':
+        return model((batch, batch.new_ones(batch.shape)))
+    result = model(batch)
+    if model_name == 'MyLLM4SSS2':
+        return result[1]  # First output is the intermediate representation.
+    return result
 
 
 def row_count(source, width):
@@ -65,7 +86,8 @@ def export_file(source, target, input_dim, output_dim, batch_size, predict):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__, epilog='Supported models: ' + ', '.join(SUPPORTED_MODELS))
     parser.add_argument('-C', '--conf', required=True)
     parser.add_argument('--batch-size', type=int, default=128)
     parser.add_argument('--device', help='Override config device, e.g. cuda:0')
@@ -78,14 +100,20 @@ def main(argv=None):
     print(f'Exporter: {Path(__file__).resolve()}', flush=True)
     from utils.conf import Configuration
     conf = Configuration(args.conf)
-    if conf.getEntry('model_selected') != 'AutoTimes':
-        parser.error('This exporter currently supports AutoTimes only')
+    model_selected = conf.getEntry('model_selected')
+    if model_selected == 'MyLLM4SSS9':
+        parser.error('MyLLM4SSS9 requires paired inputs; an independent per-row embedding '
+                     'definition is needed before full-dataset export.')
+    if model_selected not in SUPPORTED_MODELS:
+        parser.error(f'Unsupported model: {model_selected}. Choose from: ' + ', '.join(SUPPORTED_MODELS))
     if args.device:
         conf.confLoaded['device'] = args.device
+    conf.confLoaded['batch_size'] = args.batch_size
     dataset = conf.getEntry('dataset_selected')
+    print(f'Model: {model_selected}; dataset: {dataset}; batch size: {args.batch_size}', flush=True)
     prefix = 'deep1b' if dataset == 'deep1B' else dataset
     data_dir = Path(conf.getEntry('data_path'))
-    output_dir = args.output_dir or Path('example') / 'AutoTimes' / dataset / 'embeddings'
+    output_dir = args.output_dir or Path('example') / model_selected / dataset / 'embeddings'
     checkpoint_path = Path(conf.getEntry('model_path')) / 'example_model.pth'
     if not checkpoint_path.is_file():
         raise FileNotFoundError(
@@ -105,10 +133,11 @@ def main(argv=None):
         raise FileExistsError(metadata_path)
 
     import torch
-    from model.AutoTimes import AutoTimes
     device = conf.getEntry('device')
     print(f'Loading {checkpoint_path} on {device}', flush=True)
-    model = AutoTimes(conf)
+    # Load only the selected model; other models' optional dependencies are irrelevant.
+    model_class = getattr(import_module(f'model.{model_selected}'), model_selected)
+    model = model_class(conf)
     state = torch.load(checkpoint_path, map_location='cpu', weights_only=True)
     model.load_state_dict(state, strict=True)
     del state
@@ -116,17 +145,18 @@ def main(argv=None):
 
     def predict(batch):
         with torch.inference_mode():
-            return model(torch.from_numpy(batch).to(device)).float().cpu().numpy()
+            inputs = torch.from_numpy(batch).to(device)
+            return forward_embeddings(model, model_selected, inputs).float().cpu().numpy()
 
     outputs = []
     for source, target in jobs:
         count = export_file(source, target, input_dim, output_dim, args.batch_size, predict)
         outputs.append({'source': str(source.resolve()), 'file': target.name,
                         'shape': [count, output_dim]})
-    metadata = {'model': 'AutoTimes', 'dataset': dataset, 'dtype': 'float32',
+    metadata = {'model': model_selected, 'dataset': dataset, 'dtype': 'float32',
                 'byteorder': sys.byteorder, 'order': 'original input row order',
                 'checkpoint': str(checkpoint_path.resolve()),
-                'input_dim': input_dim, 'outputs': outputs}
+                'input_dim': input_dim, 'batch_size': args.batch_size, 'outputs': outputs}
     with metadata_path.open('x', encoding='utf-8') as fout:
         json.dump(metadata, fout, indent=2)
     print(f'Export completed! Metadata: {metadata_path.resolve()}', flush=True)
