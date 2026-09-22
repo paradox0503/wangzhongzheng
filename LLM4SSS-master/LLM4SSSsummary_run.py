@@ -1,22 +1,16 @@
+"""Original launch command, now exporting the full dataset and query only.
+
+Training is deliberately not imported or invoked, even when an older JSON
+configuration still contains epoch_max=100. The exporter requires an existing
+checkpoint and does not fall back to training or random initialization.
+"""
 import sys
-import argparse
 
-# import torchvision
-# torchvision.disable_beta_transforms_warning()
-# import warnings
-# warnings.filterwarnings("ignore", category=UserWarning, message="TypedStorage is deprecated")
-
-from utils.conf import Configuration
-from utils.expe import Experiment
+from export_embeddings import main as export_main
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(description='Command-line parameters')
-    parser.add_argument('-C', '--conf', type=str, required=True, dest='confpath', help='path of conf file')
-    args = parser.parse_args(argv[1: ])
-    conf = Configuration(args.confpath)
-    expe = Experiment(conf)
-    expe.run()
+    export_main(argv[1:])
 
 if __name__ == '__main__':
     main(sys.argv)

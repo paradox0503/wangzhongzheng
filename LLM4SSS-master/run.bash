@@ -1,27 +1,17 @@
-# #!/usr/bin/env bash
-# set -e
-# cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
-
-# dataset="${1:-astro}"
-# # Run sequentially with zero training epochs. JSON files remain unchanged.
-# for model in AutoTimes GPT4SSS UniTS TimeMoE; do
-#     echo "Running $model on $dataset (epoch_max=0)"
-#     python -u - "conf/$dataset/$model.json" > "run_${model}_${dataset}.out" 2>&1 <<'PY'
-# import os
-# import sys
-# from utils.conf import Configuration
-# from utils.expe import Experiment
-
-# conf = Configuration(sys.argv[1])
-# conf.confLoaded["epoch_max"] = 0
-# for key in ("log_path", "train_path", "val_path", "test_path",
-#             "train_indices_path", "val_indices_path", "test_indices_path"):
-#     os.makedirs(os.path.dirname(conf.getEntry(key)) or ".", exist_ok=True)
-# os.makedirs(conf.getEntry("model_path"), exist_ok=True)
-# Experiment(conf).run()
-# PY
-# done
+#!/usr/bin/env bash
+# Full dataset + query inference using the existing AutoTimes checkpoint.
+# Edit the settings below, then run: bash run.bash
+set -euo pipefail
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 dataset="astro"
-model="AutoTimes"
-nohup python -u LLM4SSSsummary_run.py -C conf/$dataset/$model.json > run.out 2>&1 &
-# python -u LLM4SSSsummary_run.py -C conf/$dataset/$model.json
+batch_size=128
+output_dir="example/AutoTimes/$dataset/embeddings_v2"
+
+nohup python -u LLM4SSSsummary_run.py \
+  -C "conf/$dataset/AutoTimes.json" \
+  --batch-size "$batch_size" \
+  --output-dir "$output_dir" > run.out 2>&1 &
+pid=$!
+printf '%s\n' "$pid" > run.pid
+printf 'Export started (PID %s). Follow progress: tail -f run.out\n' "$pid"
+printf 'Output directory: %s\n' "$output_dir"

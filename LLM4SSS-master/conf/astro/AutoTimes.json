@@ -23,7 +23,7 @@
     "head_num": 8,
     "dim_llm": 768,
 
-    "epoch_max": 100,
+    "epoch_max": 0,
     "len_series": 256,
     "len_reduce": 16,
     "batch_size": 1280,
