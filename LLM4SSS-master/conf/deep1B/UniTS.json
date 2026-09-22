@@ -23,7 +23,7 @@
     0
   ],
   "batch_size": 64,
-  "units_repo_path": "../UniTS",
+  "units_repo_path": "../model/UniTS",
   "units_checkpoint": "",
   "dim_model": 128,
   "head_num": 8,

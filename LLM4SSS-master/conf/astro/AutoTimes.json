@@ -14,8 +14,8 @@
     "log_path": "./example/AutoTimes/astro/log/example.log",
     "model_path": "./example/AutoTimes/astro/model/",
 
-    "device": "cuda:3",
-    "GPUs": [3],
+    "device": "cuda:0",
+    "GPUs": [1],
 
     "llm_type": "gpt2",
     "llm_layers": 6,
@@ -27,7 +27,7 @@
     "len_series": 256,
     "len_reduce": 16,
     "batch_size": 1280,
-    
+
     "data_size": 10000000,
     "train_size":200000,
     "val_size": 10000,

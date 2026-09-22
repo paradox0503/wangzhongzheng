@@ -25,7 +25,7 @@ from model.S2IPLLM import S2IPLLM
 from model.TimeMixer import TimeMixer
 from model.UniTS import UniTS
 from model.TimeMoE import TimeMoE
-   
+
 from model.MyLLM4SSS1 import MyLLM4SSS1
 from model.MyLLM4SSS2 import MyLLM4SSS2
 from model.MyLLM4SSS3 import MyLLM4SSS3

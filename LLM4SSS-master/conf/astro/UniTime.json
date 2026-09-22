@@ -14,7 +14,7 @@
     "log_path": "./example/UniTime/astro/log/example.log",
     "model_path": "./example/UniTime/astro/model/",
 
-    "device": "cuda:1",
+    "device": "cuda:0",
     "GPUs": [1],
 
     "llm_type": "gpt2",

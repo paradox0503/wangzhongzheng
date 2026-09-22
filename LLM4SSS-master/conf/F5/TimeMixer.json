@@ -13,14 +13,14 @@
     "log_path": "./example/TimeMixer/F5/log/example.log",
     "model_path": "./example/TimeMixer/F5/model/",
 
-    "device": "cuda:1",
+    "device": "cuda:0",
     "GPUs": [1],
 
     "epoch_max": 100,
     "len_series": 256,
     "len_reduce": 16,
     "batch_size": 1024,
-    
+
     "data_size": 10000000,
     "train_size":200000,
     "val_size": 10000,

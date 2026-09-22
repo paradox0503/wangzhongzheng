@@ -27,7 +27,7 @@ from model.S2IPLLM import S2IPLLM
 from model.TimeMixer import TimeMixer
 from model.UniTS import UniTS
 from model.TimeMoE import TimeMoE
-   
+
 from model.MyLLM4SSS1 import MyLLM4SSS1
 from model.MyLLM4SSS2 import MyLLM4SSS2
 from model.MyLLM4SSS3 import MyLLM4SSS3
@@ -84,7 +84,7 @@ class Experiment:
             self.epoch += 1
 
             self.train()
-                
+
             if self.epoch == 1:
                 break
 
@@ -95,9 +95,9 @@ class Experiment:
         # print("Setup experiment...")
         self.len_series = self.conf.getEntry("len_series")
         self.len_reduce = self.conf.getEntry("len_reduce")
-        
+
         model_selected = self.conf.getEntry("model_selected")
-        
+
         model_classes = {
             "GPT4SSS": GPT4SSS,
             "TimeLLM": TimeLLM,
@@ -221,9 +221,9 @@ class Experiment:
 
         elif self.loss_method in ["ScaledL2Loss", "ExpScaledL2Loss", "LogScaledL2Loss"]:
             self.optimizer.zero_grad()
-            
+
             inputs = torch.randn(self.batch_size, self.len_series).to(self.device)  # dummy data for AMP
-            
+
             if self.model_selected == "UniTime":
                 mask = self.random_mask().to(self.device)
                 inputs = inputs.masked_fill(mask==0, 0)   # (batch_size, len_series)

@@ -14,7 +14,7 @@
     "log_path": "./example/UniTime/human/log/example.log",
     "model_path": "./example/UniTime/human/model/",
 
-    "device": "cuda:1",
+    "device": "cuda:0",
     "GPUs": [1],
 
     "llm_type": "gpt2",

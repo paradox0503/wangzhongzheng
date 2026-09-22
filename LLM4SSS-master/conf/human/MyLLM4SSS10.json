@@ -14,7 +14,7 @@
     "log_path": "./example/MyLLM4SSS10/human/log/example.log",
     "model_path": "./example/MyLLM4SSS10/human/model/",
 
-    "device": "cuda:3",
+    "device": "cuda:0",
     "GPUs": [3,4],
 
     "llm_type": "gpt2",

@@ -14,8 +14,8 @@
     "log_path": "./example/UniTime/F5/log/example.log",
     "model_path": "./example/UniTime/F5/model/",
 
-    "device": "cuda:3",
-    "GPUs": [3],
+    "device": "cuda:0",
+    "GPUs": [1],
 
     "llm_type": "gpt2",
     "llm_layers": 6,

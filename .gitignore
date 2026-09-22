@@ -1,2 +1,3 @@
 model/gpt2/*
-!model/gpt2/.gitkeep
+model/UniTS/*
+model/TimeMoE-50M/*

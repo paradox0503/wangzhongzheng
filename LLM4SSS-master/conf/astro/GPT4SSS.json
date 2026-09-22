@@ -1,7 +1,7 @@
 {
     "model_selected": "GPT4SSS",
     "dataset_selected": "astro",
-    
+
     "conf_path": "./conf/astro/GPT4SSS.json",
     "data_path": "/data/user_jialinhan/data_big/",
     "llm_path": "../model/",
@@ -14,7 +14,7 @@
     "log_path": "./example/GPT4SSS/astro/log/example.log",
     "model_path": "./example/GPT4SSS/astro/model/",
 
-    "device": "cuda:1",
+    "device": "cuda:0",
     "GPUs": [1],
 
     "llm_type": "gpt2",
@@ -24,7 +24,7 @@
     "len_series": 256,
     "len_reduce": 16,
     "batch_size": 512,
-    
+
     "data_size": 10000000,
     "train_size":200000,
     "val_size": 10000,

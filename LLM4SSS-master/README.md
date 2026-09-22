@@ -46,3 +46,9 @@
 ## UniTS / TimeMoE-50M
 
 See [integration guide](MODELS_UniTS_TimeMoE.md) for model paths, dependencies, configurations and commands.
+
+
+
+pgrep -af '[L]LM4SSSsummary_run.py'
+查看程序运行状态
+结果：tail -f example/AutoTimes/astro/log/example.log
