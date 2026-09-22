@@ -6,7 +6,7 @@ cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 dataset="astro"
 model="AutoTimes"
 batch_size=128
-output_dir="example/$model/$dataset/embeddings_v2"
+output_dir="example/$model/embeddings"
 
 nohup python -u LLM4SSSsummary_run.py \
   -C "conf/$dataset/$model.json" \

@@ -3,14 +3,13 @@
 Run from the project root:
     python -u export_embeddings.py -C conf/astro/AutoTimes.json --batch-size 128
 Relative paths in the configuration follow the training script's cwd convention.
+Outputs default to example/<model>/embeddings/ with dataset-prefixed filenames.
 Existing outputs are refused; select another --output-dir for a new export.
 """
 import argparse
 from importlib import import_module
-import json
 import os
 from pathlib import Path
-import sys
 import time
 
 import numpy as np
@@ -113,7 +112,7 @@ def main(argv=None):
     print(f'Model: {model_selected}; dataset: {dataset}; batch size: {args.batch_size}', flush=True)
     prefix = 'deep1b' if dataset == 'deep1B' else dataset
     data_dir = Path(conf.getEntry('data_path'))
-    output_dir = args.output_dir or Path('example') / model_selected / dataset / 'embeddings'
+    output_dir = args.output_dir or Path('example') / model_selected / 'embeddings'
     checkpoint_path = Path(conf.getEntry('model_path')) / 'example_model.pth'
     if not checkpoint_path.is_file():
         raise FileNotFoundError(
@@ -122,16 +121,12 @@ def main(argv=None):
         )
     input_dim = conf.getEntry('len_series')
     output_dim = conf.getEntry('len_reduce')
-    jobs = [(data_dir / f'{prefix}-dataset.bin', output_dir / 'dataset_embeddings.bin'),
-            (data_dir / f'{prefix}-query.bin', output_dir / 'query_embeddings.bin')]
+    jobs = [(data_dir / f'{prefix}-dataset.bin', output_dir / f'{dataset}-dataset.bin'),
+            (data_dir / f'{prefix}-query.bin', output_dir / f'{dataset}-query.bin')]
     for source, target in jobs:
         row_count(source, input_dim)
         if target.exists() or target.with_name(target.name + '.partial').exists():
             raise FileExistsError(f'{target}: choose a new --output-dir')
-    metadata_path = output_dir / 'metadata.json'
-    if metadata_path.exists():
-        raise FileExistsError(metadata_path)
-
     import torch
     device = conf.getEntry('device')
     print(f'Loading {checkpoint_path} on {device}', flush=True)
@@ -148,18 +143,9 @@ def main(argv=None):
             inputs = torch.from_numpy(batch).to(device)
             return forward_embeddings(model, model_selected, inputs).float().cpu().numpy()
 
-    outputs = []
     for source, target in jobs:
-        count = export_file(source, target, input_dim, output_dim, args.batch_size, predict)
-        outputs.append({'source': str(source.resolve()), 'file': target.name,
-                        'shape': [count, output_dim]})
-    metadata = {'model': model_selected, 'dataset': dataset, 'dtype': 'float32',
-                'byteorder': sys.byteorder, 'order': 'original input row order',
-                'checkpoint': str(checkpoint_path.resolve()),
-                'input_dim': input_dim, 'batch_size': args.batch_size, 'outputs': outputs}
-    with metadata_path.open('x', encoding='utf-8') as fout:
-        json.dump(metadata, fout, indent=2)
-    print(f'Export completed! Metadata: {metadata_path.resolve()}', flush=True)
+        export_file(source, target, input_dim, output_dim, args.batch_size, predict)
+    print(f'Export completed! Output directory: {output_dir.resolve()}', flush=True)
 
 
 if __name__ == '__main__':
