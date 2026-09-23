@@ -1,8 +1,9 @@
 """Original launch command, now exporting the full dataset and query only.
 
 Training is deliberately not imported or invoked, even when an older JSON
-configuration still contains epoch_max=100. The exporter requires an existing
-checkpoint and does not fall back to training or random initialization.
+configuration still contains epoch_max=100. Default pretrained mode uses the
+configured backbone and untrained task layers; explicit checkpoint mode loads
+the complete task model weights.
 """
 import sys
 

@@ -5,11 +5,14 @@ Run from the project root:
 Relative paths in the configuration follow the training script's cwd convention.
 Outputs default to example/<model>/embeddings/ with dataset-prefixed filenames.
 Existing outputs are refused; select another --output-dir for a new export.
+Default pretrained mode uses the configured backbone and untrained task layers.
+Use --weights checkpoint to load a complete model_path/example_model.pth instead.
 """
 import argparse
 from importlib import import_module
 import os
 from pathlib import Path
+import random
 import time
 
 import numpy as np
@@ -91,9 +94,15 @@ def main(argv=None):
     parser.add_argument('--batch-size', type=int, default=128)
     parser.add_argument('--device', help='Override config device, e.g. cuda:0')
     parser.add_argument('--output-dir', type=Path)
+    parser.add_argument('--weights', choices=('pretrained', 'checkpoint'), default='pretrained',
+                        help='pretrained: configured backbone with untrained task layers; '
+                             'checkpoint: complete model_path/example_model.pth')
+    parser.add_argument('--seed', type=int, default=42, help='Initialization seed (default: 42)')
     args = parser.parse_args(argv)
     if args.batch_size <= 0:
         parser.error('--batch-size must be positive')
+    if not 0 <= args.seed < 2**32:
+        parser.error('--seed must be between 0 and 4294967295')
 
     print('Mode: export-only; training disabled.', flush=True)
     print(f'Exporter: {Path(__file__).resolve()}', flush=True)
@@ -113,12 +122,14 @@ def main(argv=None):
     prefix = 'deep1b' if dataset == 'deep1B' else dataset
     data_dir = Path(conf.getEntry('data_path'))
     output_dir = args.output_dir or Path('example') / model_selected / 'embeddings'
-    checkpoint_path = Path(conf.getEntry('model_path')) / 'example_model.pth'
-    if not checkpoint_path.is_file():
-        raise FileNotFoundError(
-            f'Missing checkpoint: {checkpoint_path}. Export requires existing weights; '
-            'it will not start training or initialize random weights.'
-        )
+    checkpoint_path = None
+    if args.weights == 'checkpoint':
+        checkpoint_path = Path(conf.getEntry('model_path')) / 'example_model.pth'
+        if not checkpoint_path.is_file():
+            raise FileNotFoundError(
+                f'Missing checkpoint: {checkpoint_path}. Checkpoint mode requires complete '
+                'model weights and will not fall back to initialization.'
+            )
     input_dim = conf.getEntry('len_series')
     output_dim = conf.getEntry('len_reduce')
     jobs = [(data_dir / f'{prefix}-dataset.bin', output_dir / f'{dataset}-dataset.bin'),
@@ -128,14 +139,22 @@ def main(argv=None):
         if target.exists() or target.with_name(target.name + '.partial').exists():
             raise FileExistsError(f'{target}: choose a new --output-dir')
     import torch
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
     device = conf.getEntry('device')
-    print(f'Loading {checkpoint_path} on {device}', flush=True)
+    print(f'Weights: {args.weights}; initialization seed: {args.seed}; device: {device}', flush=True)
+    if args.weights == 'pretrained':
+        print('Using the model\'s configured backbone weights/initialization. '
+              'Task-specific layers are untrained; no task checkpoint is loaded.', flush=True)
     # Load only the selected model; other models' optional dependencies are irrelevant.
     model_class = getattr(import_module(f'model.{model_selected}'), model_selected)
     model = model_class(conf)
-    state = torch.load(checkpoint_path, map_location='cpu', weights_only=True)
-    model.load_state_dict(state, strict=True)
-    del state
+    if checkpoint_path is not None:
+        print(f'Loading task checkpoint: {checkpoint_path}', flush=True)
+        state = torch.load(checkpoint_path, map_location='cpu', weights_only=True)
+        model.load_state_dict(state, strict=True)
+        del state
     model.to(device).eval()
 
     def predict(batch):

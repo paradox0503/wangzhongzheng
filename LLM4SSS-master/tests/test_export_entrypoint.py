@@ -39,6 +39,8 @@ class ExportEntrypointTests(unittest.TestCase):
             'epoch_max': 100,
             'data_path': str(self.root / 'data'),
             'model_path': str(self.checkpoint.parent),
+            'len_series': 5,
+            'len_reduce': 2,
         }), encoding='utf-8')
 
     def run_entrypoint(self, *args):
@@ -48,8 +50,8 @@ class ExportEntrypointTests(unittest.TestCase):
             cwd=self.root, capture_output=True, text=True, timeout=30,
         )
 
-    def test_old_command_with_100_epochs_checks_checkpoint_without_training(self):
-        result = self.run_entrypoint()
+    def test_checkpoint_mode_with_100_epochs_checks_weights_without_training(self):
+        result = self.run_entrypoint('--weights', 'checkpoint')
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('FileNotFoundError', result.stderr)
         self.assertIn(str(self.checkpoint), result.stderr)
@@ -69,10 +71,17 @@ class ExportEntrypointTests(unittest.TestCase):
                 config['model_selected'] = name
                 config['model_path'] = str(checkpoint.parent)
                 self.conf.write_text(json.dumps(config), encoding='utf-8')
-                result = self.run_entrypoint()
+                result = self.run_entrypoint('--weights', 'checkpoint')
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn('FileNotFoundError', result.stderr)
                 self.assertIn(str(checkpoint), result.stderr)
+
+    def test_default_mode_needs_data_but_not_a_task_checkpoint(self):
+        result = self.run_entrypoint()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('FileNotFoundError', result.stderr)
+        self.assertIn('astro-dataset.bin', result.stderr)
+        self.assertNotIn('Missing checkpoint', result.stderr)
 
     def test_pair_model_requires_an_explicit_embedding_definition(self):
         config = json.loads(self.conf.read_text(encoding='utf-8'))
