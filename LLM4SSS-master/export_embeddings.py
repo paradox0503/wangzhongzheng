@@ -46,19 +46,37 @@ def row_count(source, width):
 
 
 def export_file(source, target, input_dim, output_dim, batch_size, predict):
-    """Stream batches through predict; publish only a complete validated file."""
+    """Resume a partial output, then publish only a complete validated file."""
     source, target = Path(source), Path(target)
     if batch_size <= 0 or output_dim <= 0:
         raise ValueError('batch_size and output_dim must be positive')
     total = row_count(source, input_dim)
     partial = target.with_name(target.name + '.partial')
-    if target.exists() or partial.exists():
-        raise FileExistsError(f'Output already exists: {target} or {partial}; use a new output directory')
+    expected_size = total * output_dim * 4
+    if target.exists():
+        if target.stat().st_size != expected_size:
+            raise ValueError(f'{target}: existing output size does not match {total} rows')
+        print(f'{target}: already complete ({total:,} rows); skipping', flush=True)
+        return total
+
+    resume_rows = 0
+    if partial.exists():
+        partial_size = partial.stat().st_size
+        row_bytes = output_dim * 4
+        if partial_size % row_bytes:
+            raise ValueError(f'{partial}: size {partial_size} is not aligned to {row_bytes}-byte rows')
+        resume_rows = partial_size // row_bytes
+        if resume_rows > total:
+            raise ValueError(f'{partial}: contains {resume_rows} rows, exceeding input row count {total}')
     target.parent.mkdir(parents=True, exist_ok=True)
     started = last_report = time.monotonic()
-    print(f'{source}: {total:,} rows -> {target}', flush=True)
-    with source.open('rb') as fin, partial.open('xb') as fout:
-        for start in range(0, total, batch_size):
+    if resume_rows:
+        print(f'{source}: resuming at row {resume_rows:,}/{total:,} -> {target}', flush=True)
+    else:
+        print(f'{source}: {total:,} rows -> {target}', flush=True)
+    with source.open('rb') as fin, partial.open('ab' if partial.exists() else 'xb') as fout:
+        fin.seek(resume_rows * input_dim * 4)
+        for start in range(resume_rows, total, batch_size):
             count = min(batch_size, total - start)
             batch = np.fromfile(fin, dtype=np.float32, count=count * input_dim)
             if batch.size != count * input_dim:
@@ -73,13 +91,14 @@ def export_file(source, target, input_dim, output_dim, batch_size, predict):
             done = start + count
             now = time.monotonic()
             if now - last_report >= 10 or done == total:
-                rate = done / max(now - started, 0.001)
+                generated = done - resume_rows
+                rate = generated / max(now - started, 0.001)
                 print(f'{target.name}: {done:,}/{total:,} ({100 * done / total:.1f}%), '
-                      f'{rate:.1f} rows/s, ETA {(total - done) / rate:.0f}s', flush=True)
+                      f'{rate:.1f} rows/s, ETA {(total - done) / max(rate, 0.001):.0f}s', flush=True)
                 last_report = now
         if fin.read(1):
             raise ValueError('Input size changed during export')
-    if partial.stat().st_size != total * output_dim * 4:
+    if partial.stat().st_size != expected_size:
         raise ValueError('Output size mismatch')
     # Hard-link publication is atomic and refuses to replace an existing result.
     os.link(partial, target)
@@ -136,8 +155,6 @@ def main(argv=None):
             (data_dir / f'{prefix}-query.bin', output_dir / f'{dataset}-query.bin')]
     for source, target in jobs:
         row_count(source, input_dim)
-        if target.exists() or target.with_name(target.name + '.partial').exists():
-            raise FileExistsError(f'{target}: choose a new --output-dir')
     import torch
     random.seed(args.seed)
     np.random.seed(args.seed)
