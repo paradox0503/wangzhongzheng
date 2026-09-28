@@ -9,7 +9,7 @@ sys.path.append(root_dir)
 from BSF_Tightness.baseline import baseline_sample
 
 
-model_selected = "TimeMixer" 
+model_selected = "TimeMixer"
 dataset_selected = "sald"
 
 tightness_type = "std_tightness"
@@ -17,12 +17,13 @@ tightness_type = "std_tightness"
 print("model:", model_selected, "+ dataset:", dataset_selected)
 
 dataset_config = {
-    "human": (256, 16),
+    "origin": (256, 16),
     "deep1B": (96, 16),
     "astro": (256, 16),
     "sald": (128, 16),
     "F5": (256, 16),
-    "F10": (256, 16)
+    # "F10": (256, 16),
+    "seismic": (256, 16),
 }
 
 if dataset_selected in dataset_config:
@@ -85,8 +86,8 @@ def nearest():
     np.savetxt(exactIndex_path, np.array(nearest_indices), fmt="%d")
 
     print(f"Processing complete. Results saved to {exactIndex_path}")
-    
-    
+
+
 def split():
     sequences = []
     for idx in range(0, whole_size):
@@ -95,7 +96,7 @@ def split():
     for i in range(0, 5):
         temp = np.concatenate(sequences[slice_size * i:slice_size * (i + 1)])
         temp.tofile(target_paths[i])
-        
+
 
 def getIndex():
     for i in range(0, 5):
@@ -116,7 +117,7 @@ def getIndex():
 
         with open(approIndex_path, 'w') as f:
             f.write("\n".join(map(str, match_indice)) + "\n")
-                
+
 
 def tightness():
     exact_indice = []
@@ -133,16 +134,16 @@ def tightness():
         sample_num = 1000
         sample_indice = baseline_sample(model_selected, dataset_selected, data_num, len_series, 8, 16, 16, sample_num)
         sample = origin_data[sample_indice]
-    
+
     for appro_index_path, node_num in zip(approIndex_paths, node_nums):
         appro_indice = []
         with open(appro_index_path, 'r') as file:
             for line in file:
                 index = int(line.strip())
                 appro_indice.append(index)
-        
+
         # different tightness type
-        
+
         all_tightness = []
         for i in range(0, query_num):
             query = origin_query[i]
@@ -150,35 +151,35 @@ def tightness():
             appro = origin_data[appro_indice[i]]
             dis1 = np.linalg.norm(query - exact)
             dis2 = np.linalg.norm(query - appro)
-            
+
             if tightness_type == "std_tightness":
                 dis_sample = np.array([np.linalg.norm(query - sample[i]) for i in range(sample_num)])
                 dis3 = dis_sample.mean(axis=0)
                 tightness = (dis3 - dis2) / (dis3 - dis1)
             elif tightness_type == "tightness":
                 tightness = dis1 / dis2
-            
+
             all_tightness.append(tightness)
-            
+
         tightness_mean = np.mean(all_tightness)
         print(f"{tightness_mean}")
-        
-        
+
+
 def main():
     if not os.path.exists(exactIndex_path):
         print("Searching nearest...")
         nearest()
-        
+
     if not os.path.exists(approSeries_paths[0]):
         print("Spliting...")
         split()
-        
+
     if not os.path.exists(approIndex_paths[0]):
         print("Getting index...")
         getIndex()
-        
+
     tightness()
-    
-    
+
+
 if __name__ == "__main__":
     main()

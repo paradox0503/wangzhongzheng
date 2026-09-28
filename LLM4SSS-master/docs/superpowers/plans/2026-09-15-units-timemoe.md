@@ -14,6 +14,6 @@ on this machine, as requested. Review source, configuration and diffs only.
 
 - [x] Add adapters, optional UniTS checkpoint loading, and frozen-backbone handling.
 - [x] Register both models in training, FLOP analysis, BSF and coverage exporters.
-- [x] Add configs for human, F5, F10, astro, deep1B and sald, using existing data settings.
+- [x] Add configs for origin, F5, F10, astro, deep1B and sald, using existing data settings.
 - [x] Ensure output directories and single-GPU checkpoint saving support the new models.
 - [x] Document source/weight setup, defaults and commands; review the final diff.

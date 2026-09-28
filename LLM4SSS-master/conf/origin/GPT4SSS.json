@@ -1,0 +1,42 @@
+{
+    "model_selected": "GPT4SSS",
+    "dataset_selected": "origin",
+
+    "conf_path": "./conf/origin/GPT4SSS.json",
+    "data_path": "/data/user_jialinhan/data_big/",
+    "llm_path": "../model/",
+    "train_path": "./example/GPT4SSS/origin/sample/train.bin",
+    "val_path": "./example/GPT4SSS/origin/sample/val.bin",
+    "test_path": "./example/GPT4SSS/origin/sample/test.bin",
+    "train_indices_path": "./example/GPT4SSS/origin/sample/train_indices.bin",
+    "val_indices_path": "./example/GPT4SSS/origin/sample/val_indices.bin",
+    "test_indices_path": "./example/GPT4SSS/origin/sample/test_indices.bin",
+    "log_path": "./example/GPT4SSS/origin/log/example.log",
+    "model_path": "./example/GPT4SSS/origin/model/",
+
+    "device": "cuda:0",
+    "GPUs": [0],
+
+    "llm_type": "gpt2",
+    "llm_layers": 6,
+
+    "epoch_max": 100,
+    "len_series": 256,
+    "len_reduce": 16,
+    "batch_size": 512,
+
+    "data_size": 10000000,
+    "train_size":200000,
+    "val_size": 10000,
+    "test_size": 10000,
+
+    "patch_len": 16,
+    "stride": 8,
+
+    "head_num": 8,
+    "dim_model": 512,
+    "dim_llm": 768,
+    "dim_ff": 256,
+
+    "dropout": 0.1
+}

@@ -1,3 +1,5 @@
 model/gpt2/*
 model/UniTS/*
 model/TimeMoE-50M/*
+LLM4SSS-master/__pycache__/export_embeddings.cpython-311.pyc
+LLM4SSS-master/run.pid

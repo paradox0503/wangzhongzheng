@@ -3,7 +3,7 @@
 # Edit the settings below, then run: bash run.bash
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
-dataset="astro"
+dataset="origin"
 model="AutoTimes"
 # pretrained: configured backbone + untrained task layers; checkpoint: complete .pth
 weights="pretrained"
