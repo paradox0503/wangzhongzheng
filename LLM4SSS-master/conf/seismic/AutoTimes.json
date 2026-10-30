@@ -14,8 +14,8 @@
     "log_path": "./example/AutoTimes/seismic/log/example.log",
     "model_path": "./example/AutoTimes/seismic/model/",
 
-    "device": "cuda:4",
-    "GPUs": [4],
+    "device": "cuda:7",
+    "GPUs": [7],
 
     "llm_type": "gpt2",
     "llm_layers": 6,

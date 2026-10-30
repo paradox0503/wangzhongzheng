@@ -1,18 +1,18 @@
 {
     "model_selected": "GPT4SSS",
-    "dataset_selected": "deep1B",
-    
-    "conf_path": "./conf/deep1B/GPT4SSS.json",
+    "dataset_selected": "deep1b",
+
+    "conf_path": "./conf/deep1b/GPT4SSS.json",
     "data_path": "/data/user_jialinhan/data_big/",
     "llm_path": "../model/",
-    "train_path": "./example/GPT4SSS/deep1B/sample/train.bin",
-    "val_path": "./example/GPT4SSS/deep1B/sample/val.bin",
-    "test_path": "./example/GPT4SSS/deep1B/sample/test.bin",
-    "train_indices_path": "./example/GPT4SSS/deep1B/sample/train_indices.bin",
-    "val_indices_path": "./example/GPT4SSS/deep1B/sample/val_indices.bin",
-    "test_indices_path": "./example/GPT4SSS/deep1B/sample/test_indices.bin",
-    "log_path": "./example/GPT4SSS/deep1B/log/example.log",
-    "model_path": "./example/GPT4SSS/deep1B/model/",
+    "train_path": "./example/GPT4SSS/deep1b/sample/train.bin",
+    "val_path": "./example/GPT4SSS/deep1b/sample/val.bin",
+    "test_path": "./example/GPT4SSS/deep1b/sample/test.bin",
+    "train_indices_path": "./example/GPT4SSS/deep1b/sample/train_indices.bin",
+    "val_indices_path": "./example/GPT4SSS/deep1b/sample/val_indices.bin",
+    "test_indices_path": "./example/GPT4SSS/deep1b/sample/test_indices.bin",
+    "log_path": "./example/GPT4SSS/deep1b/log/example.log",
+    "model_path": "./example/GPT4SSS/deep1b/model/",
 
     "device": "cuda:2",
     "GPUs": [2],
@@ -24,7 +24,7 @@
     "len_series": 96,
     "len_reduce": 16,
     "batch_size": 1536,
-    
+
     "data_size": 10000000,
     "train_size":200000,
     "val_size": 10000,

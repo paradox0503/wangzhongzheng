@@ -18,11 +18,10 @@ print("model:", model_selected, "+ dataset:", dataset_selected)
 
 dataset_config = {
     "origin": (256, 16),
-    "deep1B": (96, 16),
+    "deep1b": (96, 16),
     "astro": (256, 16),
     "sald": (128, 16),
     "F5": (256, 16),
-    # "F10": (256, 16),
     "seismic": (256, 16),
 }
 

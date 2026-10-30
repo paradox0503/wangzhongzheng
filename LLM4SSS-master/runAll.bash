@@ -1,4 +1,12 @@
-dataset="origin"
-for model in "AutoTimes" "GPT4SSS" "S2IPLLM" "TimeLLM" "UniTime" "UniTS" "TimeMoE"; do
+# dataset="origin"
+# for model in "AutoTimes" "GPT4SSS" "S2IPLLM" "TimeLLM" "UniTime" "UniTS" "TimeMoE"; do
+#     nohup python -u LLM4SSSsummary_run.py -C conf/$dataset/$model.json > run.out 2>&1 &
+# done
+
+
+model="AutoTimes"
+for dataset in  "sald" "deep1b"; do
     nohup python -u LLM4SSSsummary_run.py -C conf/$dataset/$model.json > run.out 2>&1 &
 done
+
+

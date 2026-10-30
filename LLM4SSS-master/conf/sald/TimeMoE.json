@@ -18,9 +18,9 @@
   "test_indices_path": "./example/TimeMoE/sald/sample/test_indices.bin",
   "log_path": "./example/TimeMoE/sald/log/example.log",
   "model_path": "./example/TimeMoE/sald/model/",
-  "device": "cuda:0",
+  "device": "cuda:6",
   "GPUs": [
-    0
+    6
   ],
   "batch_size": 64,
   "time_moe_path": "../model/TimeMoE-50M/",
