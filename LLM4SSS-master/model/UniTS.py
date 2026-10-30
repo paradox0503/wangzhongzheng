@@ -30,10 +30,15 @@ class UniTS(nn.Module):
         )
         if args.patch_len <= 0 or args.patch_len != args.stride:
             raise ValueError('UniTS requires patch_len == stride > 0.')
+        if self.len_series < args.patch_len or self.len_series % args.patch_len:
+            raise ValueError('UniTS len_series must be divisible by patch_len (no dropped tail).')
+        self.patch_num = self.len_series // args.patch_len
         if args.d_model <= 0 or args.n_heads <= 0 or args.d_model % args.n_heads or args.d_model % 8:
             raise ValueError('UniTS dim_model must be positive and divisible by head_num and 8.')
         if args.e_layers <= 0 or args.prompt_num <= 0:
             raise ValueError('UniTS enc_layers and prompt_num must be positive.')
+        if args.prompt_num >= min(128, 2 * args.d_model):
+            raise ValueError('UniTS prompt_num must be smaller than 128 and 2 * dim_model.')
 
         # Load only the official model file, avoiding its top-level utils package
         # colliding with this project's utils. Extra dependencies are lazy-loaded.
@@ -50,6 +55,8 @@ class UniTS(nn.Module):
         # The existing experiment initializer skips modules named llm, preserving
         # official initialization and any pretrained weights loaded below.
         self.llm = upstream.Model(args, tasks, pretrain=False)
+        if self.patch_num > self.llm.position_embedding.pe.shape[-2]:
+            raise ValueError('UniTS patch count exceeds positional embedding length.')
         checkpoint_path = conf.getEntry('units_checkpoint')
         if checkpoint_path:
             self._load_backbone(checkpoint_path)
@@ -60,17 +67,17 @@ class UniTS(nn.Module):
         self.llm.requires_grad_(not self.freeze_backbone)
         if self.freeze_backbone:
             self.llm.eval()
-        # Preserve level/scale for the project's distance loss on raw sequences.
-        self.projection = nn.Linear(args.d_model + 2, self.len_reduce)
+        # Like GPT4SSS, project all data-token features rather than class logits.
+        self.projection = nn.Linear(self.patch_num * args.d_model, self.len_reduce)
 
     def _load_backbone(self, path):
-        checkpoint = torch.load(path, map_location='cpu', weights_only=True)
+        checkpoint = torch.load(Path(path).expanduser(), map_location='cpu', weights_only=True)
         state = checkpoint.get('state_dict', checkpoint.get('model', checkpoint))
         state = {key.removeprefix('module.'): value for key, value in state.items()}
         own = self.llm.state_dict()
         # Official multitask checkpoints have dataset-specific tokens. New task
         # tokens retain their initialization; shared feature weights must match.
-        required = ('patch_embeddings.', 'position_embedding.', 'blocks.', 'cls_head.')
+        required = ('patch_embeddings.', 'position_embedding.', 'blocks.')
         missing = [key for key, value in own.items() if key.startswith(required)
                    and (key not in state or state[key].shape != value.shape)]
         if missing:
@@ -88,17 +95,18 @@ class UniTS(nn.Module):
         return self
 
     def forward(self, x):
-        # [batch, len_series] -> official classification features -> [batch, len_reduce]
+        # Raw patches -> official backbone -> flattened data features, like GPT4SSS.
         if x.ndim != 2 or x.shape[1] != self.len_series:
             raise ValueError('UniTS expects [batch_size, len_series].')
-        tokens, means, stdev, n_vars, _ = self.llm.tokenize(x.unsqueeze(-1))
-        seq_len = tokens.shape[-2]
+        tokens, n_vars = self.llm.patch_embeddings(x.unsqueeze(1))
+        tokens = tokens.reshape(x.shape[0], n_vars, self.patch_num, -1)
+        tokens = tokens + self.llm.position_embedding(tokens)
         prompt = self.llm.prompt_tokens[self.dataset]
-        tokens = self.llm.prepare_prompt(tokens, n_vars, prompt,
-                                        self.llm.cls_tokens[self.task], 1,
-                                        task_name='classification')
-        tokens = self.llm.backbone(tokens, prompt.shape[2], seq_len)
-        features = self.llm.cls_head(tokens, return_feature=True)
-        features = features[:, 0, 0, :]
-        statistics = torch.cat((means[:, 0, :], stdev[:, 0, :]), dim=-1)
-        return self.projection(torch.cat((features, statistics.to(features.dtype)), dim=-1))
+        # The prompt prefix is required by UniTS's dynamic MLP. Avoid creating a
+        # CLS token and running the unused classification cross-attention head.
+        prefix_len = prompt.shape[2]
+        prompt = prompt.to(tokens.dtype).expand(x.shape[0], -1, -1, -1)
+        tokens = torch.cat((prompt, tokens), dim=2)
+        tokens = self.llm.backbone(tokens, prefix_len, self.patch_num)
+        features = tokens[:, :, prefix_len:, :].reshape(x.shape[0], -1)
+        return self.projection(features)

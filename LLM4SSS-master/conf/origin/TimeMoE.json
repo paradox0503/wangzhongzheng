@@ -1,6 +1,6 @@
 {
   "model_selected": "TimeMoE",
-  "dataset_selected": "human",
+  "dataset_selected": "origin",
   "data_path": "/data/user_jialinhan/data_big/",
   "epoch_max": 100,
   "len_series": 256,
@@ -9,15 +9,15 @@
   "train_size": 200000,
   "val_size": 10000,
   "test_size": 10000,
-  "conf_path": "./conf/human/TimeMoE.json",
-  "train_path": "./example/TimeMoE/human/sample/train.bin",
-  "train_indices_path": "./example/TimeMoE/human/sample/train_indices.bin",
-  "val_path": "./example/TimeMoE/human/sample/val.bin",
-  "val_indices_path": "./example/TimeMoE/human/sample/val_indices.bin",
-  "test_path": "./example/TimeMoE/human/sample/test.bin",
-  "test_indices_path": "./example/TimeMoE/human/sample/test_indices.bin",
-  "log_path": "./example/TimeMoE/human/log/example.log",
-  "model_path": "./example/TimeMoE/human/model/",
+  "conf_path": "./conf/origin/TimeMoE.json",
+  "train_path": "./example/TimeMoE/origin/sample/train.bin",
+  "train_indices_path": "./example/TimeMoE/origin/sample/train_indices.bin",
+  "val_path": "./example/TimeMoE/origin/sample/val.bin",
+  "val_indices_path": "./example/TimeMoE/origin/sample/val_indices.bin",
+  "test_path": "./example/TimeMoE/origin/sample/test.bin",
+  "test_indices_path": "./example/TimeMoE/origin/sample/test_indices.bin",
+  "log_path": "./example/TimeMoE/origin/log/example.log",
+  "model_path": "./example/TimeMoE/origin/model_patched/",
   "device": "cuda:0",
   "GPUs": [
     0
@@ -25,5 +25,14 @@
   "batch_size": 64,
   "time_moe_path": "../model/TimeMoE-50M/",
   "local_files_only": true,
-  "freeze_backbone": true
+  "freeze_backbone": true,
+  "win_size": 16,
+  "stride": 16,
+  "mlp_layers": 2,
+  "mlp_dim": 512,
+  "activation": "tanh",
+  "dropout": 0.1,
+  "inference_precision": "auto",
+  "export_subdir": "embeddings_patched_v2",
+  "attn_implementation": "eager"
 }

@@ -17,7 +17,7 @@
   "test_path": "./example/UniTS/astro/sample/test.bin",
   "test_indices_path": "./example/UniTS/astro/sample/test_indices.bin",
   "log_path": "./example/UniTS/astro/log/example.log",
-  "model_path": "./example/UniTS/astro/model/",
+  "model_path": "./example/UniTS/astro/model_patched/",
   "device": "cuda:0",
   "GPUs": [
     0
@@ -32,5 +32,7 @@
   "patch_len": 16,
   "stride": 16,
   "dropout": 0.1,
-  "freeze_backbone": false
+  "freeze_backbone": false,
+  "inference_precision": "auto",
+  "export_subdir": "embeddings_patched_v2"
 }

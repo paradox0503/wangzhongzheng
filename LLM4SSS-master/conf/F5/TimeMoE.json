@@ -17,7 +17,7 @@
   "test_path": "./example/TimeMoE/F5/sample/test.bin",
   "test_indices_path": "./example/TimeMoE/F5/sample/test_indices.bin",
   "log_path": "./example/TimeMoE/F5/log/example.log",
-  "model_path": "./example/TimeMoE/F5/model/",
+  "model_path": "./example/TimeMoE/F5/model_patched/",
   "device": "cuda:0",
   "GPUs": [
     0
@@ -25,5 +25,14 @@
   "batch_size": 64,
   "time_moe_path": "../model/TimeMoE-50M/",
   "local_files_only": true,
-  "freeze_backbone": true
+  "freeze_backbone": true,
+  "win_size": 16,
+  "stride": 16,
+  "mlp_layers": 2,
+  "mlp_dim": 512,
+  "activation": "tanh",
+  "dropout": 0.1,
+  "inference_precision": "auto",
+  "export_subdir": "embeddings_patched_v2",
+  "attn_implementation": "eager"
 }

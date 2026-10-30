@@ -4,11 +4,12 @@ Run from the project root:
     python -u export_embeddings.py -C conf/astro/AutoTimes.json --batch-size 128
 Relative paths in the configuration follow the training script's cwd convention.
 Outputs default to example/<model>/embeddings/ with dataset-prefixed filenames.
-Existing outputs are refused; select another --output-dir for a new export.
+Matching outputs resume/skip; changed export identities require a new directory.
 Default pretrained mode uses the configured backbone and untrained task layers.
 Use --weights checkpoint to load a complete model_path/example_model.pth instead.
 """
 import argparse
+from contextlib import nullcontext
 from importlib import import_module
 import os
 from pathlib import Path
@@ -46,8 +47,16 @@ def row_count(source, width):
 
 
 def export_file(source, target, input_dim, output_dim, batch_size, predict):
+    from utils.export_runtime import export_lock
+    with export_lock(str(target) + '.lock'):
+        return _export_file(source, target, input_dim, output_dim, batch_size, predict)
+
+
+def _export_file(source, target, input_dim, output_dim, batch_size, predict):
     """Resume a partial output, then publish only a complete validated file."""
+    from utils.export_runtime import file_identity
     source, target = Path(source), Path(target)
+    source_identity = file_identity(source)
     if batch_size <= 0 or output_dim <= 0:
         raise ValueError('batch_size and output_dim must be positive')
     total = row_count(source, input_dim)
@@ -100,6 +109,8 @@ def export_file(source, target, input_dim, output_dim, batch_size, predict):
             raise ValueError('Input size changed during export')
     if partial.stat().st_size != expected_size:
         raise ValueError('Output size mismatch')
+    if file_identity(source) != source_identity:
+        raise ValueError('Input file changed during export; use a new --output-dir')
     # Hard-link publication is atomic and refuses to replace an existing result.
     os.link(partial, target)
     partial.unlink()
@@ -112,6 +123,11 @@ def main(argv=None):
     parser.add_argument('-C', '--conf', required=True)
     parser.add_argument('--batch-size', type=int, default=128)
     parser.add_argument('--device', help='Override config device, e.g. cuda:0')
+    parser.add_argument('--precision', choices=('auto', 'fp32', 'bf16', 'fp16'),
+                        help='Override inference_precision in config (otherwise fp32). '
+                             'auto uses BF16 on supported CUDA GPUs, otherwise FP32.')
+    parser.add_argument('--attn-implementation', choices=('eager', 'flash_attention_2'),
+                        help='TimeMoE only; FlashAttention2 requires a compatible server installation')
     parser.add_argument('--output-dir', type=Path)
     parser.add_argument('--weights', choices=('pretrained', 'checkpoint'), default='pretrained',
                         help='pretrained: configured backbone with untrained task layers; '
@@ -135,12 +151,16 @@ def main(argv=None):
         parser.error(f'Unsupported model: {model_selected}. Choose from: ' + ', '.join(SUPPORTED_MODELS))
     if args.device:
         conf.confLoaded['device'] = args.device
+    if args.attn_implementation:
+        if model_selected != 'TimeMoE':
+            parser.error('--attn-implementation is only supported for TimeMoE')
+        conf.confLoaded['attn_implementation'] = args.attn_implementation
     conf.confLoaded['batch_size'] = args.batch_size
     dataset = conf.getEntry('dataset_selected')
     print(f'Model: {model_selected}; dataset: {dataset}; batch size: {args.batch_size}', flush=True)
     prefix = 'deep1b' if dataset == 'deep1B' else dataset
     data_dir = Path(conf.getEntry('data_path'))
-    output_dir = args.output_dir or Path('example') / model_selected / 'embeddings'
+    output_dir = args.output_dir or Path('example') / model_selected / conf.confLoaded.get('export_subdir', 'embeddings')
     checkpoint_path = None
     if args.weights == 'checkpoint':
         checkpoint_path = Path(conf.getEntry('model_path')) / 'example_model.pth'
@@ -160,6 +180,21 @@ def main(argv=None):
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     device = conf.getEntry('device')
+    from utils.export_runtime import resolve_precision, export_identity, ensure_export_identity
+    requested_precision = args.precision or conf.confLoaded.get('inference_precision', 'fp32')
+    precision = resolve_precision(requested_precision, device, torch)
+    if (model_selected == 'TimeMoE'
+            and conf.confLoaded.get('attn_implementation', 'eager') == 'flash_attention_2'
+            and precision == 'fp32'):
+        raise ValueError('TimeMoE FlashAttention2 requires CUDA bf16/fp16; '
+                         'use --precision bf16/fp16 or --attn-implementation eager')
+    print(f'Inference precision: {precision} (requested: {requested_precision})', flush=True)
+    identity = export_identity(conf.confLoaded, jobs, args.weights, args.seed, precision, checkpoint_path)
+    ensure_export_identity(output_dir / f'{dataset}-export.json', identity, [target for _, target in jobs])
+    if all(target.is_file() and target.stat().st_size == row_count(source, input_dim) * output_dim * 4
+           for source, target in jobs):
+        print('Dataset and query already complete with matching export identity; skipping model loading.', flush=True)
+        return
     print(f'Weights: {args.weights}; initialization seed: {args.seed}; device: {device}', flush=True)
     if args.weights == 'pretrained':
         print('Using the model\'s configured backbone weights/initialization. '
@@ -167,19 +202,32 @@ def main(argv=None):
     # Load only the selected model; other models' optional dependencies are irrelevant.
     model_class = getattr(import_module(f'model.{model_selected}'), model_selected)
     model = model_class(conf)
+    if model_selected in ('TimeMoE', 'UniTS'):
+        prefix_tokens = conf.confLoaded.get('prompt_num', 0) if model_selected == 'UniTS' else 0
+        print(f'Backbone tokens per row: {model.patch_num} data + {prefix_tokens} prompt', flush=True)
     if checkpoint_path is not None:
         print(f'Loading task checkpoint: {checkpoint_path}', flush=True)
         state = torch.load(checkpoint_path, map_location='cpu', weights_only=True)
         model.load_state_dict(state, strict=True)
         del state
     model.to(device).eval()
+    backbone_config = getattr(getattr(model, 'llm', None), 'config', None)
+    if backbone_config is not None:
+        # These outputs are unused by sequence-to-vector adapters.
+        backbone_config.use_cache = False
+        backbone_config.output_attentions = False
+        backbone_config.output_hidden_states = False
+    amp_dtype = {'bf16': torch.bfloat16, 'fp16': torch.float16}[precision] if precision != 'fp32' else None
 
     def predict(batch):
-        with torch.inference_mode():
+        amp = torch.autocast(device_type='cuda', dtype=amp_dtype) if amp_dtype is not None else nullcontext()
+        with torch.inference_mode(), amp:
             inputs = torch.from_numpy(batch).to(device)
             return forward_embeddings(model, model_selected, inputs).float().cpu().numpy()
 
     for source, target in jobs:
+        if export_identity(conf.confLoaded, jobs, args.weights, args.seed, precision, checkpoint_path) != identity:
+            raise ValueError('Inputs/weights/code changed during export; use a new --output-dir')
         export_file(source, target, input_dim, output_dim, args.batch_size, predict)
     print(f'Export completed! Output directory: {output_dir.resolve()}', flush=True)
 

@@ -39,9 +39,39 @@ class ExportTests(unittest.TestCase):
 
     def test_existing_output_preserved(self):
         self.target.write_bytes(b'existing')
-        with self.assertRaises(FileExistsError):
+        with self.assertRaises(ValueError):
             self.module.export_file(self.source, self.target, 5, 2, 3, lambda x: x[:, :2])
         self.assertEqual(self.target.read_bytes(), b'existing')
+
+    def test_complete_output_skips_prediction(self):
+        expected = self.data[:, :2].copy()
+        expected.tofile(self.target)
+        def unexpected(batch):
+            raise AssertionError('Complete output must not run inference')
+        self.assertEqual(self.module.export_file(self.source, self.target, 5, 2, 3, unexpected), 7)
+        np.testing.assert_array_equal(np.fromfile(self.target, dtype=np.float32).reshape(7, 2), expected)
+
+    def test_partial_output_resumes_at_correct_input_row(self):
+        partial = self.target.with_name(self.target.name + '.partial')
+        self.data[:3, :2].copy().tofile(partial)
+        seen = []
+        def predict(batch):
+            seen.append(batch.copy())
+            return batch[:, :2]
+        self.module.export_file(self.source, self.target, 5, 2, 3, predict)
+        np.testing.assert_array_equal(np.concatenate(seen), self.data[3:])
+        np.testing.assert_array_equal(np.fromfile(self.target, dtype=np.float32).reshape(7, 2), self.data[:, :2])
+        self.assertFalse(partial.exists())
+
+    def test_input_changed_during_prediction_is_not_published(self):
+        def predict(batch):
+            info = self.source.stat()
+            import os
+            os.utime(self.source, ns=(info.st_atime_ns, info.st_mtime_ns + 1000000000))
+            return batch[:, :2]
+        with self.assertRaisesRegex(ValueError, 'Input file changed'):
+            self.module.export_file(self.source, self.target, 5, 2, 3, predict)
+        self.assertFalse(self.target.exists())
 
     def test_malformed_input_rejected(self):
         self.source.write_bytes(b'bad')

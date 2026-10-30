@@ -93,7 +93,8 @@ class ExportWeightTests(unittest.TestCase):
     def test_pretrained_mode_exports_both_files_without_a_task_checkpoint(self):
         output = self.export('pretrained', 'pretrained')
         self.assertFalse(self.checkpoint.exists())
-        self.assertEqual({p.name for p in output.iterdir()}, {'astro-dataset.bin', 'astro-query.bin'})
+        self.assertEqual({p.name for p in output.glob('*.bin')}, {'astro-dataset.bin', 'astro-query.bin'})
+        self.assertTrue((output / 'astro-export.json').is_file())
         dataset = np.fromfile(output / 'astro-dataset.bin', dtype=np.float32).reshape(7, 2)
         query = np.fromfile(output / 'astro-query.bin', dtype=np.float32).reshape(3, 2)
         np.testing.assert_array_equal(query, dataset[[0, 2, 6]])

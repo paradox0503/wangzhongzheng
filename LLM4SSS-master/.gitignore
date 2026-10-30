@@ -9,3 +9,5 @@ run.out
 BSF_Data.out
 model/__pycache__/*
 utils/__pycache__/*
+LLM4SSS-master/docs/*
+LLM4SSS-master/tests/*
