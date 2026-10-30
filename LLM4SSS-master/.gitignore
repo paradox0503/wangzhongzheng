@@ -7,6 +7,10 @@ BSF_Data/**/*.bin
 
 run.out
 BSF_Data.out
+runall.out
+runall.pid
+run2.out
+run2.pid
 model/__pycache__/*
 utils/__pycache__/*
 LLM4SSS-master/docs/*

@@ -75,7 +75,7 @@ def main(argv):
     len_reduce = conf.getEntry("len_reduce")
 
     data_path = conf.getEntry("data_path")
-    file_prefix = 'deep1b' if dataset_selected == 'deep1B' else dataset_selected
+    file_prefix = 'deep1b' if dataset_selected.lower() == 'deep1b' else dataset_selected
     data_pos = os.path.join(data_path, file_prefix + '-dataset.bin')
     query_pos = os.path.join(data_path, file_prefix + '-query.bin')
 

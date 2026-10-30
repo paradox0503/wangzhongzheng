@@ -14,8 +14,8 @@
     "log_path": "./example/AutoTimes/F5/log/example.log",
     "model_path": "./example/AutoTimes/F5/model/",
 
-    "device": "cuda:0",
-    "GPUs": [1],
+    "device": "cuda:3",
+    "GPUs": [3],
 
     "llm_type": "gpt2",
     "llm_layers": 6,

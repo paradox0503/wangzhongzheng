@@ -77,7 +77,7 @@ class ExportWeightTests(unittest.TestCase):
             load=lambda path, **kwargs: {'weight': np.fromfile(path, dtype=np.float32).reshape(5, 2)},
         )
 
-    def export(self, name, mode):
+    def export(self, name, mode, *extra):
         output = self.root / name
         with patch.dict(sys.modules, {'torch': self.runtime}), \
              patch.object(sys, 'path', [str(PROJECT), *sys.path]), \
@@ -85,7 +85,7 @@ class ExportWeightTests(unittest.TestCase):
              redirect_stdout(io.StringIO()):
             try:
                 self.module.main(['-C', str(self.conf), '--weights', mode,
-                                  '--batch-size', '3', '--output-dir', str(output)])
+                                  '--batch-size', '3', '--output-dir', str(output), *extra])
             except (SystemExit, FileNotFoundError) as exc:
                 self.fail(f'Export in {mode} mode failed: {exc}')
         return output
@@ -104,6 +104,27 @@ class ExportWeightTests(unittest.TestCase):
         output = self.export('checkpoint', 'checkpoint')
         result = np.fromfile(output / 'astro-dataset.bin', dtype=np.float32).reshape(7, 2)
         np.testing.assert_array_equal(result, self.data[:, :2])
+
+    def test_dataset_cap_does_not_cap_queries_and_records_policy(self):
+        np.eye(5, 2, dtype=np.float32).tofile(self.checkpoint)
+        output = self.export('capped', 'checkpoint', '--max-dataset-rows', '2')
+        dataset = np.fromfile(output / 'astro-dataset.bin', dtype=np.float32).reshape(2, 2)
+        query = np.fromfile(output / 'astro-query.bin', dtype=np.float32).reshape(3, 2)
+        np.testing.assert_array_equal(dataset, self.data[:2, :2])
+        np.testing.assert_array_equal(query, self.data[[0, 2, 6], :2])
+        manifest = json.loads((output / 'astro-export.json').read_text())
+        self.assertEqual(manifest['row_policy']['max_dataset_rows'], 2)
+        # A matching capped run must skip weights/model construction entirely.
+        with patch.object(SmallModel, '__init__', side_effect=AssertionError('Should skip model loading')):
+            self.export('capped', 'checkpoint', '--max-dataset-rows', '2')
+        with self.assertRaisesRegex(ValueError, 'changed'):
+            self.export('capped', 'checkpoint', '--max-dataset-rows', '3')
+
+    def test_zero_dataset_limit_exports_all_rows(self):
+        output = self.export('unlimited', 'pretrained', '--max-dataset-rows', '0')
+        self.assertEqual((output / 'astro-dataset.bin').stat().st_size, 7 * 2 * 4)
+        manifest = json.loads((output / 'astro-export.json').read_text())
+        self.assertIsNone(manifest['row_policy']['max_dataset_rows'])
 
     def test_pretrained_mode_keeps_same_seed_and_ignores_existing_task_weights(self):
         first = self.export('first', 'pretrained')

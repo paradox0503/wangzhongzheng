@@ -8,7 +8,7 @@
 TimeMoE 对齐 AutoTimes 的编码、骨干、解码及投影流程；UniTS 对齐
 GPT4SSS 的分块特征、骨干、展平及投影流程。保留各自骨干，不保证相同耗时或效果。
 
-已补齐 human、F5、F10、astro、deep1B、sald 共 12 个配置，保留各数据集
+已补齐 origin、F5、seismic、astro、deep1b、sald 共 12 个配置，保留各数据集
 原有长度及采样数量。新配置默认单卡 `cuda:0`、`GPUs: [0]`、批大小 64；
 实际批大小需按服务器显存调整。
 
@@ -19,7 +19,7 @@ GPT4SSS 的分块特征、骨干、展平及投影流程。保留各自骨干，
   `<units_repo_path>/models/UniTS.py`，不会将其 `utils` 加入 Python 搜索路径。
 - 在实际运行的服务器上安装官方依赖（包括 PyTorch、timm）；当前机器未安装。
 - 默认维度 128、3 层、8 个注意力头、10 个提示 token。
-  分块与同数据集 AutoTimes 一致：sald/deep1B 为 8，其余为 16。
+  分块与同数据集 AutoTimes 一致：sald/deep1b 为 8，其余为 16。
 - `units_checkpoint` 默认为空，表示从头训练官方 UniTS 结构，**不代表已加载预训练模型**。
   使用预训练权重时填写本地 checkpoint 文件路径，模型维度、层数和 patch 长度
   必须与权重一致。支持原始 state_dict，以及 `state_dict` / `model` 包装和 `module.` 前缀。
@@ -54,7 +54,7 @@ GPT4SSS 的分块特征、骨干、展平及投影流程。保留各自骨干，
   绕过官方逐点输入 embedding，但保留全部预训练 decoder 层；这是本项目的
   分块适配实验，不是官方逐点输入的零样本预测。
 - 六份配置的窗口、步长、MLP 和 dropout 设置与同数据集 AutoTimes 一致。
-  `sald` 为 128/8=16 tokens，`deep1B` 为 96/8=12 tokens；
+  `sald` 为 128/8=16 tokens，`deep1b` 为 96/8=12 tokens；
   `origin`、`F5`、`astro`、`seismic` 为 256/16=16 tokens。
   要求 `win_size == stride > 0` 且长度整除窗口，避免漏掉尾部或改变样本数。
 - 默认冻结骨干，训练编码器、解码器与投影层。冻结不会切断编码器的梯度；
@@ -94,7 +94,7 @@ GPU 使用 autocast BF16，其他 GPU/CPU 保持 FP32。参数和输出文件仍
 
 默认新模型输出到 `example/<model>/embeddings_patched_v2/`，显式 `--output-dir`
 优先。导出目录内新增 `<dataset>-export.json`，记录源文件大小/mtime、配置、seed、
-实际精度、代码哈希和本地权重大小/mtime；改变这些内容必须使用新目录。
+实际精度、导出行数策略、代码哈希和本地权重大小/mtime；改变这些内容必须使用新目录。
 无身份记录的旧文件也会被拒绝续写，不会覆盖或删除。大文件使用元数据识别，
 不是全量内容校验；替换数据/权重时不要人为保留旧大小与mtime。
 TimeMoE 可恢复导出强制使用本地权重目录。
@@ -102,6 +102,11 @@ TimeMoE 可恢复导出强制使用本地权重目录。
 每个输出使用操作系统文件锁，进程退出后锁自动释放；小型 `.lock` 文件保留，
 无需删除。两份输出已完成且身份一致时，跳过模型加载和推理。
 不得用不同代码/精度重复生成 dataset 与 query 后混合使用。
+
+保留服务器的导出策略：所有 dataset 默认只导出前 100,000,000 个完整行，
+query 导出全部完整行。`--max-dataset-rows N` 可调整上限，`N <= 0` 表示不限量；
+它不影响 query。源文件末尾不足一行的数据会给出警告并跳过，原文件不修改。
+续跑和已完成判断使用同一行数上限；修改上限也需要新输出目录。
 
 服务器可先用 batch 128 跑新目录，观察 rows/s 和显存，再在相同配置下尝试 256/512。
 没有 GPU 实测，不能预设最大 batch 或承诺加速倍数。示例（从项目根目录执行）：
@@ -126,12 +131,19 @@ python -u export_embeddings.py -C conf/sald/TimeMoE.json --batch-size 256 --prec
 
 训练读取 `/data/user_jialinhan/data_big/astro-dataset.bin`，导出脚本还会读取
 同目录下的 `astro-query.bin`。目录末尾的斜杠可省略。
-`deep1B` 配置自动对应文件前缀 `deep1b`，其余数据集名称原样用作文件前缀。
+配置目录和 dataset 名称统一为小写 `deep1b`（Linux 区分大小写）。
+读原始数据时仍兼容旧配置中的 `deep1B`，对应文件前缀 `deep1b`。
+已有 `example/`、`BSF_Data/`、`BSF_Tightness/` 下的大写 `deep1B` 结果未迁移或删除；
+新版小写路径不会自动复用这些旧结果，复用历史分析时需明确选择原路径。
 该规则应用于 `utils/sample.py`、`BSF_Data/genData.py` 和 `nnCoverage/getData.py`。
 
+合并服务器提交时保留了服务器 GPU 分配及脚本选择：`runall.bash` 默认运行
+TimeMoE 的 sald/seismic；原 `runAll.bash` 使用不与小写脚本冲突的名称
+`runAll_models.bash`。`run2.bash` 保留；运行日志和 PID 不纳入源码。
+
 ```bash
-python -u LLM4SSSsummary_run.py -C conf/human/UniTS.json
-python -u LLM4SSSsummary_run.py -C conf/human/TimeMoE.json
+python -u LLM4SSSsummary_run.py -C conf/origin/UniTS.json
+python -u LLM4SSSsummary_run.py -C conf/origin/TimeMoE.json
 ```
 
 也可将原 `run.bash` 中的 model 改成 `UniTS` 或 `TimeMoE`。

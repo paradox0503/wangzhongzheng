@@ -5,12 +5,17 @@ set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd -- "$script_dir"
 
-model="AutoTimes"
-datasets=("sald" "deep1B")
+# model="AutoTimes"
+model="TimeMoE"
+# datasets=("astro" "deep1b" "F5" "origin" "sald" "seismic")
+datasets=("sald" "seismic")
 # pretrained: configured backbone + untrained task layers; checkpoint: complete .pth
 weights="pretrained"
 batch_size=128
 output_dir="example/$model/embeddings"
+if [[ "$model" == "TimeMoE" || "$model" == "UniTS" ]]; then
+  output_dir="example/$model/embeddings_patched_v2"
+fi
 
 if [[ "${1:-}" == "--worker" ]]; then
   shift

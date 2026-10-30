@@ -68,7 +68,7 @@ def file_identity(path):
     return dict(path=str(path), size=info.st_size, mtime_ns=info.st_mtime_ns)
 
 
-def export_identity(config, jobs, weights, seed, precision, checkpoint_path):
+def export_identity(config, jobs, weights, seed, precision, checkpoint_path, max_dataset_rows=None):
     # Batch size/device may change on resume; representation settings may not.
     settings = {k: v for k, v in config.items() if k not in ('batch_size', 'device', 'GPUs')}
     project = Path(__file__).resolve().parents[1]
@@ -93,7 +93,8 @@ def export_identity(config, jobs, weights, seed, precision, checkpoint_path):
         for path in sorted(Path(backbone).expanduser().iterdir()):
             if path.is_file() and path.suffix in ('.json', '.py', '.bin', '.safetensors', '.pt', '.pth'):
                 assets.append(file_identity(path))
-    return dict(version=1, config=settings, weights=weights, seed=seed,
+    return dict(version=2, config=settings, weights=weights, seed=seed,
+                row_policy=dict(max_dataset_rows=max_dataset_rows, query='all_complete_rows'),
                 precision=precision, sources=[file_identity(source) for source, _ in jobs],
                 assets=assets, code={str(p.resolve()): hashlib.sha256(p.read_bytes()).hexdigest()
                                     for p in code})

@@ -18,9 +18,9 @@
   "test_indices_path": "./example/TimeMoE/seismic/sample/test_indices.bin",
   "log_path": "./example/TimeMoE/seismic/log/example.log",
   "model_path": "./example/TimeMoE/seismic/model_patched/",
-  "device": "cuda:0",
+  "device": "cuda:7",
   "GPUs": [
-    0
+    7
   ],
   "batch_size": 64,
   "time_moe_path": "../model/TimeMoE-50M/",

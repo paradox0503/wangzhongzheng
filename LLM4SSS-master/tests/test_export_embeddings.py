@@ -79,6 +79,37 @@ class ExportTests(unittest.TestCase):
             self.module.export_file(self.source, self.target, 5, 2, 3, lambda x: x[:, :2])
         self.assertFalse(self.target.exists())
 
+    def test_capped_export_keeps_only_requested_prefix(self):
+        seen = []
+        def predict(batch):
+            seen.append(batch.copy())
+            return batch[:, :2]
+        count = self.module.export_file(self.source, self.target, 5, 2, 3, predict, max_rows=4)
+        self.assertEqual(count, 4)
+        np.testing.assert_array_equal(np.concatenate(seen), self.data[:4])
+        np.testing.assert_array_equal(np.fromfile(self.target, dtype=np.float32).reshape(4, 2), self.data[:4, :2])
+
+    def test_capped_partial_resumes_without_requiring_source_eof(self):
+        partial = self.target.with_name(self.target.name + '.partial')
+        self.data[:3, :2].copy().tofile(partial)
+        count = self.module.export_file(self.source, self.target, 5, 2, 3,
+                                        lambda x: x[:, :2], max_rows=5)
+        self.assertEqual(count, 5)
+        np.testing.assert_array_equal(np.fromfile(self.target, dtype=np.float32).reshape(5, 2), self.data[:5, :2])
+
+    def test_incomplete_final_input_row_is_warned_and_ignored(self):
+        with self.source.open('ab') as stream:
+            stream.write(b'tail')
+        with self.assertWarns(UserWarning):
+            count = self.module.export_file(self.source, self.target, 5, 2, 3, lambda x: x[:, :2])
+        self.assertEqual(count, 7)
+        np.testing.assert_array_equal(np.fromfile(self.target, dtype=np.float32).reshape(7, 2), self.data[:, :2])
+
+    def test_nonpositive_explicit_row_limit_is_rejected(self):
+        for limit in (0, -1):
+            with self.subTest(limit=limit), self.assertRaises(ValueError):
+                self.module.row_count(self.source, 5, max_rows=limit)
+
     def test_invalid_prediction_not_published(self):
         with self.assertRaises(ValueError):
             self.module.export_file(self.source, self.target, 5, 2, 3, lambda x: np.full((len(x), 2), np.nan))

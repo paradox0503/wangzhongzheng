@@ -1,4 +1,4 @@
-"""Export every dataset/query row as a float32 embedding using the configured model.
+"""Export dataset/query rows as float32 embeddings using the configured model.
 
 Run from the project root:
     python -u export_embeddings.py -C conf/astro/AutoTimes.json --batch-size 128
@@ -7,6 +7,8 @@ Outputs default to example/<model>/embeddings/ with dataset-prefixed filenames.
 Matching outputs resume/skip; changed export identities require a new directory.
 Default pretrained mode uses the configured backbone and untrained task layers.
 Use --weights checkpoint to load a complete model_path/example_model.pth instead.
+Datasets default to the first 100,000,000 rows; queries use all complete rows.
+Use --max-dataset-rows 0 for unlimited datasets. Incomplete final rows are skipped.
 """
 import argparse
 from contextlib import nullcontext
@@ -15,6 +17,7 @@ import os
 from pathlib import Path
 import random
 import time
+import warnings
 
 import numpy as np
 
@@ -23,6 +26,8 @@ SUPPORTED_MODELS = (
     'AutoTimes', 'GPT4SSS', 'TimeLLM', 'UniTime', 'S2IPLLM',
     'TimeMixer', 'UniTS', 'TimeMoE',
 ) + tuple(f'MyLLM4SSS{i}' for i in range(1, 12) if i != 9)
+
+DEFAULT_MAX_DATASET_ROWS = 100_000_000
 
 
 def forward_embeddings(model, model_name, batch):
@@ -39,27 +44,33 @@ def forward_embeddings(model, model_name, batch):
     return result
 
 
-def row_count(source, width):
+def row_count(source, width, max_rows=None):
+    """Count complete float32 rows, respecting the server's optional row cap."""
     size = Path(source).stat().st_size
-    if width <= 0 or size == 0 or size % (4 * width):
+    if width <= 0 or size < 4 * width:
         raise ValueError(f'{source}: expected nonempty float32 rows of width {width}')
-    return size // (4 * width)
+    if max_rows is not None and max_rows <= 0:
+        raise ValueError('max_rows must be positive')
+    complete, tail = divmod(size, 4 * width)
+    if tail:
+        warnings.warn(f'{source}: ignoring {tail} trailing bytes that do not form a complete row')
+    return min(complete, max_rows) if max_rows is not None else complete
 
 
-def export_file(source, target, input_dim, output_dim, batch_size, predict):
+def export_file(source, target, input_dim, output_dim, batch_size, predict, max_rows=None):
     from utils.export_runtime import export_lock
     with export_lock(str(target) + '.lock'):
-        return _export_file(source, target, input_dim, output_dim, batch_size, predict)
+        return _export_file(source, target, input_dim, output_dim, batch_size, predict, max_rows)
 
 
-def _export_file(source, target, input_dim, output_dim, batch_size, predict):
+def _export_file(source, target, input_dim, output_dim, batch_size, predict, max_rows=None):
     """Resume a partial output, then publish only a complete validated file."""
     from utils.export_runtime import file_identity
     source, target = Path(source), Path(target)
     source_identity = file_identity(source)
     if batch_size <= 0 or output_dim <= 0:
         raise ValueError('batch_size and output_dim must be positive')
-    total = row_count(source, input_dim)
+    total = row_count(source, input_dim, max_rows=max_rows)
     partial = target.with_name(target.name + '.partial')
     expected_size = total * output_dim * 4
     if target.exists():
@@ -105,8 +116,8 @@ def _export_file(source, target, input_dim, output_dim, batch_size, predict):
                 print(f'{target.name}: {done:,}/{total:,} ({100 * done / total:.1f}%), '
                       f'{rate:.1f} rows/s, ETA {(total - done) / max(rate, 0.001):.0f}s', flush=True)
                 last_report = now
-        if fin.read(1):
-            raise ValueError('Input size changed during export')
+        # Capped datasets and incomplete trailing rows need not reach EOF.
+        # The source identity is rechecked below before publishing the output.
     if partial.stat().st_size != expected_size:
         raise ValueError('Output size mismatch')
     if file_identity(source) != source_identity:
@@ -133,7 +144,11 @@ def main(argv=None):
                         help='pretrained: configured backbone with untrained task layers; '
                              'checkpoint: complete model_path/example_model.pth')
     parser.add_argument('--seed', type=int, default=42, help='Initialization seed (default: 42)')
+    parser.add_argument('--max-dataset-rows', type=int, default=DEFAULT_MAX_DATASET_ROWS,
+                        help='Dataset row cap (default: 100000000); <=0 exports all rows. '
+                             'Query files are always exported in full.')
     args = parser.parse_args(argv)
+    max_dataset_rows = args.max_dataset_rows if args.max_dataset_rows > 0 else None
     if args.batch_size <= 0:
         parser.error('--batch-size must be positive')
     if not 0 <= args.seed < 2**32:
@@ -158,7 +173,7 @@ def main(argv=None):
     conf.confLoaded['batch_size'] = args.batch_size
     dataset = conf.getEntry('dataset_selected')
     print(f'Model: {model_selected}; dataset: {dataset}; batch size: {args.batch_size}', flush=True)
-    prefix = 'deep1b' if dataset == 'deep1B' else dataset
+    prefix = 'deep1b' if dataset.lower() == 'deep1b' else dataset
     data_dir = Path(conf.getEntry('data_path'))
     output_dir = args.output_dir or Path('example') / model_selected / conf.confLoaded.get('export_subdir', 'embeddings')
     checkpoint_path = None
@@ -173,8 +188,12 @@ def main(argv=None):
     output_dim = conf.getEntry('len_reduce')
     jobs = [(data_dir / f'{prefix}-dataset.bin', output_dir / f'{dataset}-dataset.bin'),
             (data_dir / f'{prefix}-query.bin', output_dir / f'{dataset}-query.bin')]
-    for source, target in jobs:
-        row_count(source, input_dim)
+    limits = [max_dataset_rows, None]
+    job_rows = [row_count(source, input_dim, max_rows=limit)
+                for (source, _), limit in zip(jobs, limits)]
+    limit_label = f'{max_dataset_rows:,}' if max_dataset_rows is not None else 'unlimited'
+    print(f'Dataset: {job_rows[0]:,} rows (limit={limit_label}); '
+          f'query: all {job_rows[1]:,} complete rows', flush=True)
     import torch
     random.seed(args.seed)
     np.random.seed(args.seed)
@@ -189,10 +208,11 @@ def main(argv=None):
         raise ValueError('TimeMoE FlashAttention2 requires CUDA bf16/fp16; '
                          'use --precision bf16/fp16 or --attn-implementation eager')
     print(f'Inference precision: {precision} (requested: {requested_precision})', flush=True)
-    identity = export_identity(conf.confLoaded, jobs, args.weights, args.seed, precision, checkpoint_path)
+    identity = export_identity(conf.confLoaded, jobs, args.weights, args.seed, precision,
+                               checkpoint_path, max_dataset_rows=max_dataset_rows)
     ensure_export_identity(output_dir / f'{dataset}-export.json', identity, [target for _, target in jobs])
-    if all(target.is_file() and target.stat().st_size == row_count(source, input_dim) * output_dim * 4
-           for source, target in jobs):
+    if all(target.is_file() and target.stat().st_size == rows * output_dim * 4
+           for (_, target), rows in zip(jobs, job_rows)):
         print('Dataset and query already complete with matching export identity; skipping model loading.', flush=True)
         return
     print(f'Weights: {args.weights}; initialization seed: {args.seed}; device: {device}', flush=True)
@@ -225,10 +245,11 @@ def main(argv=None):
             inputs = torch.from_numpy(batch).to(device)
             return forward_embeddings(model, model_selected, inputs).float().cpu().numpy()
 
-    for source, target in jobs:
-        if export_identity(conf.confLoaded, jobs, args.weights, args.seed, precision, checkpoint_path) != identity:
+    for (source, target), limit in zip(jobs, limits):
+        if export_identity(conf.confLoaded, jobs, args.weights, args.seed, precision,
+                           checkpoint_path, max_dataset_rows=max_dataset_rows) != identity:
             raise ValueError('Inputs/weights/code changed during export; use a new --output-dir')
-        export_file(source, target, input_dim, output_dim, args.batch_size, predict)
+        export_file(source, target, input_dim, output_dim, args.batch_size, predict, max_rows=limit)
     print(f'Export completed! Output directory: {output_dir.resolve()}', flush=True)
 
 

@@ -15,7 +15,7 @@
     "model_path": "./example/AutoTimes/astro/model/",
 
     "device": "cuda:0",
-    "GPUs": [1],
+    "GPUs": [0],
 
     "llm_type": "gpt2",
     "llm_layers": 6,
